@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# uploaded book PDFs are provided at runtime/deploy storage, not committed
+/public/uploads/books/*.pdf
+
 # debug
 npm-debug.log*
 yarn-debug.log*
