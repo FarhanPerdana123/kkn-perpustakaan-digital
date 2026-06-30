@@ -103,11 +103,20 @@ function normalizeBook(book) {
           name: book.category,
         }
       : null;
-  const normalizedCategories = categories.length
-    ? categories
-    : legacyCategory
-      ? [legacyCategory]
-      : [];
+  const categoryMap = new Map();
+
+  for (const category of [...categories, legacyCategory].filter(Boolean)) {
+    const name = String(category.name || "").trim();
+    const id = String(category.id || createSlug(name)).trim();
+
+    if (!name) {
+      continue;
+    }
+
+    categoryMap.set(id || name, { id, name });
+  }
+
+  const normalizedCategories = Array.from(categoryMap.values());
 
   return {
     ...book,
