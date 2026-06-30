@@ -41,14 +41,14 @@ export function FeaturedCollections({
               className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
               key={item.id}
             >
-              <div className="flex aspect-[16/10] items-center justify-center overflow-hidden bg-gradient-to-br from-emerald-100 to-lime-50">
+              <div className="flex aspect-[2/3] w-full max-w-[400px] items-center justify-center self-center overflow-hidden bg-gradient-to-br from-emerald-100 to-lime-50">
                 {item.coverUrl ? (
                   <div className="relative h-full w-full">
                     <Image
                     alt={`Sampul ${item.title}`}
                     className="h-full w-full object-cover"
                     fill
-                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
                     src={item.coverUrl}
                   />
                   </div>
