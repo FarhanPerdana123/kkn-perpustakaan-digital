@@ -1,15 +1,20 @@
 "use client";
 
+import HTMLFlipBook from "react-pageflip";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ReaderToolbar } from "./ReaderToolbar";
 
 const pdfJsUrl = "/pdfjs/pdf.mjs";
 const pdfWorkerUrl = "/pdfjs/pdf.worker.min.mjs";
-const FLIP_DURATION = 900;
-const FLIP_SWAP_TIME = 430;
-const FLIP_CLEAR_TIME = 930;
 
 function useReaderSize() {
   const [reader, setReader] = useState({
@@ -63,27 +68,19 @@ function useReaderSize() {
   return reader;
 }
 
-function BookPage({
-  pageNumber,
-  imageUrl,
-  title,
-  width,
-  height,
-  isCover,
-  isHiddenDuringFlip = false,
-}) {
+const BookPage = forwardRef(function BookPage(
+  { pageNumber, imageUrl, title, width, height, isCover },
+  ref,
+) {
   return (
     <div
+      ref={ref}
       className={[
         "relative flex shrink-0 flex-col justify-between overflow-hidden bg-[#fffdf7]",
         "border border-slate-300 shadow-2xl",
         isCover ? "rounded-r-md" : "rounded-sm",
       ].join(" ")}
-      style={{
-        width,
-        height,
-        visibility: isHiddenDuringFlip ? "hidden" : "visible",
-      }}
+      style={{ width, height }}
     >
       <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-black/10 to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-black/10 to-transparent" />
@@ -110,185 +107,11 @@ function BookPage({
       </div>
     </div>
   );
-}
-
-function FlipOverlay({
-  animation,
-  title,
-  width,
-  height,
-  isMobile,
-  visiblePagesLength,
-}) {
-  if (!animation) return null;
-
-  const isNext = animation.direction === "next";
-
-  const stableVisiblePagesLength =
-    animation.visiblePagesLength ?? visiblePagesLength;
-
-  const overlayLeft = isMobile
-    ? 0
-    : isNext
-      ? stableVisiblePagesLength === 2
-        ? width
-        : 0
-      : 0;
-
-  const transformOrigin = isNext ? "left center" : "right center";
-  const animationName = isNext ? "smoothBookFlipNext" : "smoothBookFlipPrev";
-
-  return (
-    <div
-      className="pointer-events-none absolute top-0 z-50"
-      style={{
-        left: overlayLeft,
-        width,
-        height,
-        perspective: "2200px",
-      }}
-    >
-      <div
-        className="relative h-full w-full"
-        style={{
-          transformOrigin,
-          transformStyle: "preserve-3d",
-          animation: `${animationName} ${FLIP_DURATION}ms cubic-bezier(0.18, 0.82, 0.22, 1) forwards`,
-          willChange: "transform, filter, box-shadow",
-        }}
-      >
-        <div
-          className="absolute inset-0 overflow-hidden rounded-sm border border-slate-300 bg-[#fffdf7] shadow-2xl"
-          style={{
-            backfaceVisibility: "hidden",
-            transform: "translateZ(1px)",
-          }}
-        >
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-14 bg-gradient-to-r from-black/20 via-black/5 to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-black/30 via-black/10 to-transparent" />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-black/10" />
-
-          <div className="flex h-[calc(100%-33px)] items-center justify-center bg-[#fffdf7] p-3">
-            {animation.frontImageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                alt={`${title} halaman ${animation.frontPageNumber}`}
-                className="max-h-full max-w-full select-none object-contain"
-                draggable={false}
-                src={animation.frontImageUrl}
-              />
-            ) : (
-              <div className="text-sm font-semibold text-slate-500">
-                Halaman {animation.frontPageNumber}
-              </div>
-            )}
-          </div>
-
-          <div className="border-t border-slate-200 bg-[#fffdf7] px-4 py-2 text-center text-xs font-semibold text-slate-500">
-            Halaman {animation.frontPageNumber}
-          </div>
-        </div>
-
-        <div
-          className="absolute inset-0 overflow-hidden rounded-sm border border-slate-300 bg-[#fffdf7] shadow-2xl"
-          style={{
-            transform: "rotateY(180deg) translateZ(1px)",
-            backfaceVisibility: "hidden",
-          }}
-        >
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-black/30 via-black/10 to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-black/20 via-black/5 to-transparent" />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-transparent via-white/10 to-black/10" />
-
-          <div className="flex h-[calc(100%-33px)] items-center justify-center bg-[#fffdf7] p-3">
-            {animation.backImageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                alt={`${title} halaman ${animation.backPageNumber}`}
-                className="max-h-full max-w-full select-none object-contain"
-                draggable={false}
-                src={animation.backImageUrl}
-              />
-            ) : (
-              <div className="text-sm font-semibold text-slate-500">
-                Halaman {animation.backPageNumber}
-              </div>
-            )}
-          </div>
-
-          <div className="border-t border-slate-200 bg-[#fffdf7] px-4 py-2 text-center text-xs font-semibold text-slate-500">
-            Halaman {animation.backPageNumber}
-          </div>
-        </div>
-      </div>
-
-      <style jsx global>{`
-        @keyframes smoothBookFlipNext {
-          0% {
-            transform: rotateY(0deg) translateZ(0) scaleX(1);
-            filter: brightness(1);
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
-          }
-          18% {
-            transform: rotateY(-28deg) translateZ(10px) scaleX(0.995);
-            filter: brightness(0.98);
-          }
-          38% {
-            transform: rotateY(-78deg) translateZ(22px) scaleX(0.985);
-            filter: brightness(0.9);
-            box-shadow: -24px 20px 45px rgba(0, 0, 0, 0.32);
-          }
-          52% {
-            transform: rotateY(-104deg) translateZ(24px) scaleX(0.98);
-            filter: brightness(0.86);
-          }
-          72% {
-            transform: rotateY(-148deg) translateZ(14px) scaleX(0.99);
-            filter: brightness(0.94);
-          }
-          100% {
-            transform: rotateY(-180deg) translateZ(0) scaleX(1);
-            filter: brightness(1);
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
-          }
-        }
-
-        @keyframes smoothBookFlipPrev {
-          0% {
-            transform: rotateY(0deg) translateZ(0) scaleX(1);
-            filter: brightness(1);
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
-          }
-          18% {
-            transform: rotateY(28deg) translateZ(10px) scaleX(0.995);
-            filter: brightness(0.98);
-          }
-          38% {
-            transform: rotateY(78deg) translateZ(22px) scaleX(0.985);
-            filter: brightness(0.9);
-            box-shadow: 24px 20px 45px rgba(0, 0, 0, 0.32);
-          }
-          52% {
-            transform: rotateY(104deg) translateZ(24px) scaleX(0.98);
-            filter: brightness(0.86);
-          }
-          72% {
-            transform: rotateY(148deg) translateZ(14px) scaleX(0.99);
-            filter: brightness(0.94);
-          }
-          100% {
-            transform: rotateY(180deg) translateZ(0) scaleX(1);
-            filter: brightness(1);
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
-          }
-        }
-      `}</style>
-    </div>
-  );
-}
+});
 
 export function FlipBookReader({ pdfUrl, title }) {
   const readerRef = useRef(null);
+  const bookRef = useRef(null);
   const pdfDocumentRef = useRef(null);
   const pageCacheRef = useRef(new Map());
   const pendingPagesRef = useRef(new Set());
@@ -302,10 +125,10 @@ export function FlipBookReader({ pdfUrl, title }) {
   const [loading, setLoading] = useState(Boolean(pdfUrl));
   const [error, setError] = useState("");
   const [zoom, setZoom] = useState(1);
-  const [turning, setTurning] = useState("");
-  const [flipAnimation, setFlipAnimation] = useState(null);
 
   const canRead = totalPages > 0 && !loading && !error;
+  const atStart = currentPage <= 1;
+  const atEnd = currentPage >= totalPages;
 
   const cleanupCache = useCallback(() => {
     pageCacheRef.current.forEach((item) => {
@@ -349,7 +172,6 @@ export function FlipBookReader({ pdfUrl, title }) {
         );
 
         let viewport = page.getViewport({ scale });
-
         const maxCanvasHeight = isMobile ? 1300 : 1600;
 
         if (viewport.height > maxCanvasHeight) {
@@ -430,8 +252,8 @@ export function FlipBookReader({ pdfUrl, title }) {
         });
 
         for (
-          let pageNumber = anchorPage - 2;
-          pageNumber <= anchorPage + 4;
+          let pageNumber = anchorPage - 1;
+          pageNumber <= anchorPage + 3;
           pageNumber += 1
         ) {
           if (pageNumber >= 1 && pageNumber <= totalPages) {
@@ -474,6 +296,7 @@ export function FlipBookReader({ pdfUrl, title }) {
   useEffect(() => {
     let cancelled = false;
     let loadingTask = null;
+    const pendingPages = pendingPagesRef.current;
 
     async function loadPdf() {
       if (!pdfUrl) {
@@ -492,10 +315,9 @@ export function FlipBookReader({ pdfUrl, title }) {
       const token = renderTokenRef.current;
 
       try {
-        const pdfjsLib = await Function(
-          "url",
-          "return import(url)",
-        )(pdfJsUrl);
+        const pdfjsLib = await Function("url", "return import(url)")(
+          pdfJsUrl,
+        );
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
           pdfWorkerUrl,
@@ -537,7 +359,7 @@ export function FlipBookReader({ pdfUrl, title }) {
       cancelled = true;
       renderTokenRef.current += 1;
       pdfDocumentRef.current = null;
-      pendingPagesRef.current.clear();
+      pendingPages.clear();
 
       if (loadingTask) {
         loadingTask.destroy();
@@ -552,18 +374,20 @@ export function FlipBookReader({ pdfUrl, title }) {
 
     const token = renderTokenRef.current;
     const preloadPages = getPreloadPages(currentPage);
+    const keepPages = new Set();
+    const timeoutIds = [];
 
     preloadPages.forEach((pageNumber, index) => {
-      window.setTimeout(() => {
+      const timeoutId = window.setTimeout(() => {
         renderPage(pageNumber, token);
       }, index * 30);
+
+      timeoutIds.push(timeoutId);
     });
 
-    const keepPages = new Set();
-
     for (
-      let pageNumber = currentPage - 4;
-      pageNumber <= currentPage + 6;
+      let pageNumber = currentPage - 2;
+      pageNumber <= currentPage + 4;
       pageNumber += 1
     ) {
       if (pageNumber >= 1 && pageNumber <= totalPages) {
@@ -572,7 +396,16 @@ export function FlipBookReader({ pdfUrl, title }) {
     }
 
     preloadPages.forEach((pageNumber) => keepPages.add(pageNumber));
-    pruneCache(Array.from(keepPages));
+
+    const pruneTimeoutId = window.setTimeout(() => {
+      pruneCache(Array.from(keepPages));
+    }, 120);
+
+    timeoutIds.push(pruneTimeoutId);
+
+    return () => {
+      timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    };
   }, [
     canRead,
     currentPage,
@@ -582,119 +415,12 @@ export function FlipBookReader({ pdfUrl, title }) {
     totalPages,
   ]);
 
-  const visiblePages = useMemo(() => {
-    if (!totalPages) return [];
-
-    if (isMobile) {
-      return [currentPage];
-    }
-
-    if (currentPage === 1) {
-      return [1];
-    }
-
-    return [currentPage, currentPage + 1].filter(
-      (pageNumber) => pageNumber <= totalPages,
-    );
-  }, [currentPage, isMobile, totalPages]);
-
-  function getNextPage() {
-    if (!totalPages) return currentPage;
-
-    const nextPage = isMobile
-      ? currentPage + 1
-      : currentPage === 1
-        ? 2
-        : currentPage + 2;
-
-    return Math.min(nextPage, totalPages);
-  }
-
-  function getPrevPage() {
-    if (!totalPages) return currentPage;
-
-    const previousPage = isMobile
-      ? currentPage - 1
-      : currentPage <= 2
-        ? 1
-        : currentPage - 2;
-
-    return Math.max(previousPage, 1);
-  }
-
-  function goToPage(pageNumber, direction) {
-    if (!canRead) return;
-    if (pageNumber === currentPage) return;
-    if (turning) return;
-
-    const token = renderTokenRef.current;
-    const preloadPages = getPreloadPages(pageNumber);
-
-    preloadPages.forEach((item, index) => {
-      window.setTimeout(() => {
-        renderPage(item, token);
-      }, index * 10);
-    });
-
-    const activeVisiblePages = isMobile
-      ? [currentPage]
-      : currentPage === 1
-        ? [1]
-        : [currentPage, currentPage + 1].filter((item) => item <= totalPages);
-
-    const targetVisiblePages = isMobile
-      ? [pageNumber]
-      : pageNumber === 1
-        ? [1]
-        : [pageNumber, pageNumber + 1].filter((item) => item <= totalPages);
-
-    const frontPageNumber =
-      direction === "next"
-        ? activeVisiblePages[activeVisiblePages.length - 1]
-        : activeVisiblePages[0];
-
-    const backPageNumber =
-      direction === "next"
-        ? targetVisiblePages[0]
-        : targetVisiblePages[targetVisiblePages.length - 1];
-
-    setTurning(direction);
-
-    setFlipAnimation({
-      direction,
-      phase: "front",
-      visiblePagesLength: activeVisiblePages.length,
-      frontPageNumber,
-      frontImageUrl: pageImages[frontPageNumber],
-      backPageNumber,
-      backImageUrl: pageImages[backPageNumber],
-    });
-
-    window.setTimeout(() => {
-      setCurrentPage(pageNumber);
-
-      setFlipAnimation((currentAnimation) =>
-        currentAnimation
-          ? {
-              ...currentAnimation,
-              phase: "back",
-            }
-          : currentAnimation,
-      );
-    }, FLIP_SWAP_TIME);
-
-    window.setTimeout(() => {
-      setTurning("");
-      setFlipAnimation(null);
-    }, FLIP_CLEAR_TIME);
-  }
-
   function goPrev() {
-    goToPage(getPrevPage(), "prev");
+    bookRef.current?.pageFlip()?.flipPrev();
   }
 
   function goNext() {
-    goToPage(getNextPage(), "next");
+    bookRef.current?.pageFlip()?.flipNext();
   }
 
   function goBack() {
@@ -719,19 +445,6 @@ export function FlipBookReader({ pdfUrl, title }) {
     [zoom],
   );
 
-  const atStart = currentPage <= 1;
-  const atEnd = currentPage >= totalPages;
-
-  function shouldHidePageDuringFlip(pageNumber) {
-    if (!flipAnimation) return false;
-
-    if (flipAnimation.phase === "back") {
-      return pageNumber === flipAnimation.backPageNumber;
-    }
-
-    return pageNumber === flipAnimation.frontPageNumber;
-  }
-
   return (
     <section
       className="bg-slate-950 px-3 py-8 text-white sm:px-6 lg:px-8"
@@ -745,7 +458,7 @@ export function FlipBookReader({ pdfUrl, title }) {
           <h2 className="mt-2 text-2xl font-bold text-white">{title}</h2>
         </div>
 
-        <div className="relative mx-auto flex min-h-[560px] items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-[radial-gradient(circle_at_center,#334155_0%,#0f172a_70%)] p-4 shadow-inner sm:min-h-[720px]">
+        <div className="relative mx-auto flex min-h-[560px] items-center justify-center overflow-auto rounded-2xl border border-slate-700 bg-[radial-gradient(circle_at_center,#334155_0%,#0f172a_70%)] p-4 shadow-inner sm:min-h-[720px]">
           {loading ? (
             <div className="rounded-lg border border-white/10 bg-slate-950/70 px-6 py-5 text-center text-sm font-semibold text-slate-200">
               <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-700 border-t-emerald-400" />
@@ -786,7 +499,7 @@ export function FlipBookReader({ pdfUrl, title }) {
               <button
                 aria-label="Halaman sebelumnya"
                 className="absolute left-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-slate-950/80 text-white shadow-lg hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40 md:grid"
-                disabled={atStart || Boolean(turning)}
+                disabled={atStart}
                 onClick={goPrev}
                 type="button"
               >
@@ -797,47 +510,60 @@ export function FlipBookReader({ pdfUrl, title }) {
                 className="relative flex max-w-full items-center justify-center overflow-visible"
                 style={{ perspective: "1800px" }}
               >
-                {!isMobile && visiblePages.length === 2 ? (
+                {!isMobile ? (
                   <div className="pointer-events-none absolute left-1/2 top-4 z-30 h-[calc(100%-2rem)] w-[2px] -translate-x-1/2 bg-gradient-to-b from-transparent via-black/30 to-transparent" />
                 ) : null}
 
-                <div className="relative">
-                  <div
-                    className={[
-                      "flex items-center justify-center",
-                      visiblePages.length === 2 ? "gap-0" : "",
-                    ].join(" ")}
-                    style={spreadStyle}
-                  >
-                    {visiblePages.map((pageNumber, index) => (
-                      <BookPage
-                        key={pageNumber}
-                        pageNumber={pageNumber}
-                        imageUrl={pageImages[pageNumber]}
-                        title={title}
-                        width={width}
-                        height={height}
-                        isCover={pageNumber === 1 || index === 0}
-                        isHiddenDuringFlip={shouldHidePageDuringFlip(pageNumber)}
-                      />
-                    ))}
-                  </div>
-
-                  <FlipOverlay
-                    animation={flipAnimation}
-                    title={title}
+                <div
+                  className="transition-transform duration-200 ease-out"
+                  style={spreadStyle}
+                >
+                  <HTMLFlipBook
+                    ref={bookRef}
                     width={width}
                     height={height}
-                    isMobile={isMobile}
-                    visiblePagesLength={visiblePages.length}
-                  />
+                    size="fixed"
+                    minWidth={280}
+                    maxWidth={520}
+                    minHeight={390}
+                    maxHeight={740}
+                    autoSize={false}
+                    className="mx-auto"
+                    drawShadow
+                    flippingTime={950}
+                    maxShadowOpacity={0.45}
+                    mobileScrollSupport
+                    showCover={!isMobile}
+                    usePortrait={isMobile}
+                    startPage={0}
+                    startZIndex={10}
+                    onFlip={(event) => {
+                      setCurrentPage(event.data + 1);
+                    }}
+                  >
+                    {Array.from({ length: totalPages }, (_, index) => {
+                      const pageNumber = index + 1;
+
+                      return (
+                        <BookPage
+                          key={pageNumber}
+                          pageNumber={pageNumber}
+                          imageUrl={pageImages[pageNumber]}
+                          title={title}
+                          width={width}
+                          height={height}
+                          isCover={pageNumber === 1}
+                        />
+                      );
+                    })}
+                  </HTMLFlipBook>
                 </div>
               </div>
 
               <button
                 aria-label="Halaman berikutnya"
                 className="absolute right-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-slate-950/80 text-white shadow-lg hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40 md:grid"
-                disabled={atEnd || Boolean(turning)}
+                disabled={atEnd}
                 onClick={goNext}
                 type="button"
               >
