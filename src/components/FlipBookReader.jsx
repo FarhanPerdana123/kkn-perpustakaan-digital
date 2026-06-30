@@ -7,6 +7,9 @@ import { ReaderToolbar } from "./ReaderToolbar";
 
 const pdfJsUrl = "/pdfjs/pdf.mjs";
 const pdfWorkerUrl = "/pdfjs/pdf.worker.min.mjs";
+const FLIP_DURATION = 900;
+const FLIP_SWAP_TIME = 430;
+const FLIP_CLEAR_TIME = 930;
 
 function useReaderSize() {
   const [reader, setReader] = useState({
@@ -118,7 +121,7 @@ function FlipOverlay({
       : 0;
 
   const transformOrigin = isNext ? "left center" : "right center";
-  const animationName = isNext ? "bookFlipNext" : "bookFlipPrev";
+  const animationName = isNext ? "smoothBookFlipNext" : "smoothBookFlipPrev";
 
   return (
     <div
@@ -127,7 +130,7 @@ function FlipOverlay({
         left: overlayLeft,
         width,
         height,
-        perspective: "1800px",
+        perspective: "2200px",
       }}
     >
       <div
@@ -135,18 +138,20 @@ function FlipOverlay({
         style={{
           transformOrigin,
           transformStyle: "preserve-3d",
-          animation: `${animationName} 620ms cubic-bezier(0.22, 0.72, 0.22, 1) forwards`,
-          willChange: "transform",
+          animation: `${animationName} ${FLIP_DURATION}ms cubic-bezier(0.18, 0.82, 0.22, 1) forwards`,
+          willChange: "transform, filter, box-shadow",
         }}
       >
         <div
           className="absolute inset-0 overflow-hidden rounded-sm border border-slate-300 bg-[#fffdf7] shadow-2xl"
           style={{
             backfaceVisibility: "hidden",
+            transform: "translateZ(1px)",
           }}
         >
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-black/25 to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-black/25 to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-14 bg-gradient-to-r from-black/20 via-black/5 to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-black/30 via-black/10 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-black/10" />
 
           <div className="flex h-[calc(100%-33px)] items-center justify-center bg-[#fffdf7] p-3">
             {animation.frontImageUrl ? (
@@ -172,12 +177,13 @@ function FlipOverlay({
         <div
           className="absolute inset-0 overflow-hidden rounded-sm border border-slate-300 bg-[#fffdf7] shadow-2xl"
           style={{
-            transform: "rotateY(180deg)",
+            transform: "rotateY(180deg) translateZ(1px)",
             backfaceVisibility: "hidden",
           }}
         >
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-black/25 to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-black/25 to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-black/30 via-black/10 to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-black/20 via-black/5 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-transparent via-white/10 to-black/10" />
 
           <div className="flex h-[calc(100%-33px)] items-center justify-center bg-[#fffdf7] p-3">
             {animation.backImageUrl ? (
@@ -202,31 +208,63 @@ function FlipOverlay({
       </div>
 
       <style jsx global>{`
-        @keyframes bookFlipNext {
+        @keyframes smoothBookFlipNext {
           0% {
-            transform: rotateY(0deg);
+            transform: rotateY(0deg) translateZ(0) scaleX(1);
             filter: brightness(1);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
           }
-          45% {
-            filter: brightness(0.92);
+          18% {
+            transform: rotateY(-28deg) translateZ(10px) scaleX(0.995);
+            filter: brightness(0.98);
+          }
+          38% {
+            transform: rotateY(-78deg) translateZ(22px) scaleX(0.985);
+            filter: brightness(0.9);
+            box-shadow: -24px 20px 45px rgba(0, 0, 0, 0.32);
+          }
+          52% {
+            transform: rotateY(-104deg) translateZ(24px) scaleX(0.98);
+            filter: brightness(0.86);
+          }
+          72% {
+            transform: rotateY(-148deg) translateZ(14px) scaleX(0.99);
+            filter: brightness(0.94);
           }
           100% {
-            transform: rotateY(-180deg);
+            transform: rotateY(-180deg) translateZ(0) scaleX(1);
             filter: brightness(1);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
           }
         }
 
-        @keyframes bookFlipPrev {
+        @keyframes smoothBookFlipPrev {
           0% {
-            transform: rotateY(0deg);
+            transform: rotateY(0deg) translateZ(0) scaleX(1);
             filter: brightness(1);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
           }
-          45% {
-            filter: brightness(0.92);
+          18% {
+            transform: rotateY(28deg) translateZ(10px) scaleX(0.995);
+            filter: brightness(0.98);
+          }
+          38% {
+            transform: rotateY(78deg) translateZ(22px) scaleX(0.985);
+            filter: brightness(0.9);
+            box-shadow: 24px 20px 45px rgba(0, 0, 0, 0.32);
+          }
+          52% {
+            transform: rotateY(104deg) translateZ(24px) scaleX(0.98);
+            filter: brightness(0.86);
+          }
+          72% {
+            transform: rotateY(148deg) translateZ(14px) scaleX(0.99);
+            filter: brightness(0.94);
           }
           100% {
-            transform: rotateY(180deg);
+            transform: rotateY(180deg) translateZ(0) scaleX(1);
             filter: brightness(1);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
           }
         }
       `}</style>
@@ -572,6 +610,7 @@ export function FlipBookReader({ pdfUrl, title }) {
   function goToPage(pageNumber, direction) {
     if (!canRead) return;
     if (pageNumber === currentPage) return;
+    if (turning) return;
 
     const token = renderTokenRef.current;
     const preloadPages = getPreloadPages(pageNumber);
@@ -616,12 +655,12 @@ export function FlipBookReader({ pdfUrl, title }) {
 
     window.setTimeout(() => {
       setCurrentPage(pageNumber);
-    }, 520);
+    }, FLIP_SWAP_TIME);
 
     window.setTimeout(() => {
       setTurning("");
       setFlipAnimation(null);
-    }, 650);
+    }, FLIP_CLEAR_TIME);
   }
 
   function goPrev() {
@@ -711,7 +750,7 @@ export function FlipBookReader({ pdfUrl, title }) {
               <button
                 aria-label="Halaman sebelumnya"
                 className="absolute left-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-slate-950/80 text-white shadow-lg hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40 md:grid"
-                disabled={atStart}
+                disabled={atStart || Boolean(turning)}
                 onClick={goPrev}
                 type="button"
               >
@@ -761,7 +800,7 @@ export function FlipBookReader({ pdfUrl, title }) {
               <button
                 aria-label="Halaman berikutnya"
                 className="absolute right-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-slate-950/80 text-white shadow-lg hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40 md:grid"
-                disabled={atEnd}
+                disabled={atEnd || Boolean(turning)}
                 onClick={goNext}
                 type="button"
               >
