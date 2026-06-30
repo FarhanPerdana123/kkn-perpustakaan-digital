@@ -474,7 +474,7 @@ export function FlipBookReader({ pdfUrl, title }) {
 
   return (
     <section
-      className="bg-slate-950 px-3 py-8 text-white sm:px-6 lg:px-8"
+      className="flipbook-reader bg-slate-950 px-3 py-8 text-white sm:px-6 lg:px-8"
       ref={readerRef}
     >
       <div className="mx-auto max-w-7xl">
@@ -485,7 +485,7 @@ export function FlipBookReader({ pdfUrl, title }) {
           <h2 className="mt-2 text-2xl font-bold text-white">{title}</h2>
         </div>
 
-        <div className="relative mx-auto flex min-h-[560px] items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-[radial-gradient(circle_at_center,#334155_0%,#0f172a_70%)] p-4 shadow-inner sm:min-h-[720px]">
+        <div className="relative mx-auto flex min-h-[560px] items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-[radial-gradient(circle_at_center,#334155_0%,#0f172a_70%)] p-4 shadow-inner [scrollbar-width:none] sm:min-h-[720px]">
           {loading ? (
             <div className="rounded-lg border border-white/10 bg-slate-950/70 px-6 py-5 text-center text-sm font-semibold text-slate-200">
               <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-700 border-t-emerald-400" />
@@ -534,7 +534,7 @@ export function FlipBookReader({ pdfUrl, title }) {
               </button>
 
               <div
-                className="relative flex max-w-full items-center justify-center overflow-visible"
+                className="relative flex max-w-full items-center justify-center overflow-hidden"
                 style={{ perspective: "1800px" }}
               >
                 {!isMobile ? (
@@ -616,6 +616,42 @@ export function FlipBookReader({ pdfUrl, title }) {
           />
         </div>
       </div>
+
+      <style jsx global>{`
+        .flipbook-reader,
+        .flipbook-reader * {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+
+        .flipbook-reader::-webkit-scrollbar,
+        .flipbook-reader *::-webkit-scrollbar {
+          display: none;
+          width: 0;
+          height: 0;
+        }
+
+        .flipbook-reader .stf__wrapper,
+        .flipbook-reader .stf__parent,
+        .flipbook-reader .stf__block,
+        .flipbook-reader .stf__item {
+          scrollbar-width: none !important;
+          -ms-overflow-style: none !important;
+        }
+
+        .flipbook-reader .stf__wrapper::-webkit-scrollbar,
+        .flipbook-reader .stf__parent::-webkit-scrollbar,
+        .flipbook-reader .stf__block::-webkit-scrollbar,
+        .flipbook-reader .stf__item::-webkit-scrollbar {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
+        }
+
+        body {
+          overflow-x: hidden;
+        }
+      `}</style>
     </section>
   );
 }
