@@ -15,6 +15,7 @@ import { ReaderToolbar } from "./ReaderToolbar";
 
 const pdfJsUrl = "/pdfjs/pdf.mjs";
 const pdfWorkerUrl = "/pdfjs/pdf.worker.min.mjs";
+const LAZY_RENDER_RADIUS = 3;
 
 function useReaderSize() {
   const [reader, setReader] = useState({
@@ -68,13 +69,20 @@ const BookPage = forwardRef(function BookPage({ page, title, isCover }, ref) {
       <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-black/10 to-transparent" />
 
       <div className="flex min-h-0 flex-1 items-center justify-center bg-[#fffdf7] p-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          alt={`${title} halaman ${page.pageNumber}`}
-          className="max-h-full max-w-full select-none object-contain"
-          draggable={false}
-          src={page.imageUrl}
-        />
+        {page.imageUrl ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            alt={`${title} halaman ${page.pageNumber}`}
+            className="max-h-full max-w-full select-none object-contain"
+            draggable={false}
+            src={page.imageUrl}
+          />
+        ) : (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-center text-sm font-semibold text-slate-500">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-emerald-500" />
+            <span>Menyiapkan halaman {page.pageNumber}</span>
+          </div>
+        )}
       </div>
 
       <div className="border-t border-slate-200 bg-[#fffdf7] px-4 py-2 text-center text-xs font-semibold text-slate-500">
@@ -87,30 +95,111 @@ const BookPage = forwardRef(function BookPage({ page, title, isCover }, ref) {
 export function FlipBookReader({ pdfUrl, title }) {
   const bookRef = useRef(null);
   const readerRef = useRef(null);
-  const objectUrlsRef = useRef([]);
+  const objectUrlsRef = useRef(new Map());
+  const pdfDocumentRef = useRef(null);
+  const renderQueueRef = useRef(new Set());
+  const renderedPagesRef = useRef(new Set());
+  const renderTokenRef = useRef(0);
 
   const { width, height, isMobile } = useReaderSize();
 
   const [pages, setPages] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(Boolean(pdfUrl));
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [zoom, setZoom] = useState(1);
 
-  const totalPages = pages.length;
   const canFlip = totalPages > 0;
 
   const cleanupObjectUrls = useCallback(() => {
     objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-    objectUrlsRef.current = [];
+    objectUrlsRef.current.clear();
+    renderedPagesRef.current.clear();
   }, []);
+
+  const renderPage = useCallback(
+    async (pageNumber, token) => {
+      const pdf = pdfDocumentRef.current;
+
+      if (
+        !pdf ||
+        renderQueueRef.current.has(pageNumber) ||
+        renderedPagesRef.current.has(pageNumber)
+      ) {
+        return;
+      }
+
+      renderQueueRef.current.add(pageNumber);
+
+      try {
+        const page = await pdf.getPage(pageNumber);
+
+        if (renderTokenRef.current !== token) {
+          return;
+        }
+
+        const viewport = page.getViewport({
+          scale: isMobile ? 1.45 : 1.75,
+        });
+
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+
+        if (!context) {
+          throw new Error("Canvas tidak didukung browser.");
+        }
+
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+
+        context.fillStyle = "#fffdf7";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        await page.render({
+          canvasContext: context,
+          viewport,
+        }).promise;
+
+        if (renderTokenRef.current !== token) {
+          return;
+        }
+
+        const blob = await new Promise((resolve) => {
+          canvas.toBlob(resolve, "image/jpeg", 0.92);
+        });
+
+        const imageUrl = blob
+          ? URL.createObjectURL(blob)
+          : canvas.toDataURL("image/png");
+
+        if (blob) {
+          objectUrlsRef.current.set(pageNumber, imageUrl);
+        }
+
+        renderedPagesRef.current.add(pageNumber);
+
+        setPages((currentPages) =>
+          currentPages.map((item) =>
+            item.pageNumber === pageNumber ? { ...item, imageUrl } : item,
+          ),
+        );
+      } catch (err) {
+        console.error(err);
+      } finally {
+        renderQueueRef.current.delete(pageNumber);
+      }
+    },
+    [isMobile],
+  );
 
   useEffect(() => {
     let cancelled = false;
     let loadingTask = null;
+    const renderQueue = renderQueueRef.current;
 
-    async function renderPdf() {
+    async function loadPdf() {
       if (!pdfUrl) {
         setError("File buku belum tersedia atau gagal dimuat.");
         setLoading(false);
@@ -120,9 +209,13 @@ export function FlipBookReader({ pdfUrl, title }) {
       setLoading(true);
       setError("");
       setPages([]);
+      setTotalPages(0);
       setCurrentPage(1);
       setProgress(0);
       cleanupObjectUrls();
+      renderQueue.clear();
+      renderTokenRef.current += 1;
+      pdfDocumentRef.current = null;
 
       try {
         const pdfjsLib = await import(/* webpackIgnore: true */ pdfJsUrl);
@@ -134,57 +227,18 @@ export function FlipBookReader({ pdfUrl, title }) {
         });
 
         const pdf = await loadingTask.promise;
-        const renderedPages = [];
-
-        for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-          if (cancelled) return;
-
-          const page = await pdf.getPage(pageNumber);
-          const viewport = page.getViewport({
-            scale: isMobile ? 1.45 : 1.75,
-          });
-
-          const canvas = document.createElement("canvas");
-          const context = canvas.getContext("2d");
-
-          if (!context) {
-            throw new Error("Canvas tidak didukung browser.");
-          }
-
-          canvas.width = Math.floor(viewport.width);
-          canvas.height = Math.floor(viewport.height);
-
-          context.fillStyle = "#fffdf7";
-          context.fillRect(0, 0, canvas.width, canvas.height);
-
-          await page.render({
-            canvasContext: context,
-            viewport,
-          }).promise;
-
-          const blob = await new Promise((resolve) => {
-            canvas.toBlob(resolve, "image/jpeg", 0.92);
-          });
-
-          const imageUrl = blob
-            ? URL.createObjectURL(blob)
-            : canvas.toDataURL("image/png");
-
-          if (blob) {
-            objectUrlsRef.current.push(imageUrl);
-          }
-
-          renderedPages.push({
-            imageUrl,
-            pageNumber,
-          });
-
-          setProgress(Math.round((pageNumber / pdf.numPages) * 100));
-        }
 
         if (!cancelled) {
-          setPages(renderedPages);
+          pdfDocumentRef.current = pdf;
+          setTotalPages(pdf.numPages);
+          setPages(
+            Array.from({ length: pdf.numPages }, (_, index) => ({
+              imageUrl: "",
+              pageNumber: index + 1,
+            })),
+          );
           setCurrentPage(1);
+          setProgress(100);
         }
       } catch (err) {
         console.error(err);
@@ -199,10 +253,13 @@ export function FlipBookReader({ pdfUrl, title }) {
       }
     }
 
-    renderPdf();
+    loadPdf();
 
     return () => {
       cancelled = true;
+      renderTokenRef.current += 1;
+      renderQueue.clear();
+      pdfDocumentRef.current = null;
 
       if (loadingTask) {
         loadingTask.destroy();
@@ -210,7 +267,23 @@ export function FlipBookReader({ pdfUrl, title }) {
 
       cleanupObjectUrls();
     };
-  }, [pdfUrl, isMobile, cleanupObjectUrls]);
+  }, [pdfUrl, cleanupObjectUrls]);
+
+  useEffect(() => {
+    if (loading || error || totalPages === 0) {
+      return;
+    }
+
+    const token = renderTokenRef.current;
+    const startPage = Math.max(1, currentPage - LAZY_RENDER_RADIUS);
+    const endPage = Math.min(totalPages, currentPage + LAZY_RENDER_RADIUS);
+
+    queueMicrotask(() => {
+      for (let pageNumber = startPage; pageNumber <= endPage; pageNumber += 1) {
+        renderPage(pageNumber, token);
+      }
+    });
+  }, [currentPage, error, loading, renderPage, totalPages]);
 
   const flipBook = useCallback(() => bookRef.current?.pageFlip(), []);
 
