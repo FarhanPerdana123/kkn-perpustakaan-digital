@@ -471,6 +471,7 @@ export function FlipBookReader({ pdfUrl, title }) {
     }),
     [zoom],
   );
+  const isFrontCoverView = !isMobile && currentPage === 1;
 
   return (
     <section
@@ -537,7 +538,7 @@ export function FlipBookReader({ pdfUrl, title }) {
                 className="relative flex max-w-full items-center justify-center overflow-hidden"
                 style={{ perspective: "1800px" }}
               >
-                {!isMobile ? (
+                {!isMobile && !isFrontCoverView ? (
                   <div className="pointer-events-none absolute left-1/2 top-4 z-30 h-[calc(100%-2rem)] w-[2px] -translate-x-1/2 bg-gradient-to-b from-transparent via-black/30 to-transparent" />
                 ) : null}
 
@@ -555,12 +556,14 @@ export function FlipBookReader({ pdfUrl, title }) {
                     minHeight={390}
                     maxHeight={740}
                     autoSize={false}
-                    className="mx-auto overflow-hidden rounded-sm bg-[#fffdf7] shadow-[0_18px_45px_rgba(0,0,0,0.28)]"
+                    className={`mx-auto overflow-hidden rounded-sm shadow-[0_18px_45px_rgba(0,0,0,0.28)] ${
+                      isFrontCoverView ? "bg-transparent" : "bg-[#fffdf7]"
+                    }`}
                     drawShadow
                     flippingTime={1350}
                     maxShadowOpacity={0.22}
                     mobileScrollSupport={false}
-                    showCover={false}
+                    showCover={!isMobile}
                     showPageCorners
                     useMouseEvents
                     clickEventForward
