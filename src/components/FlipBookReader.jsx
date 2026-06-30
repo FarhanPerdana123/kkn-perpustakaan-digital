@@ -97,6 +97,90 @@ function BookPage({ pageNumber, imageUrl, title, width, height, isCover }) {
   );
 }
 
+function FlipOverlay({
+  animation,
+  title,
+  width,
+  height,
+  isMobile,
+  visiblePagesLength,
+}) {
+  if (!animation) return null;
+
+  const isNext = animation.direction === "next";
+  const isTurning = animation.phase === "turning";
+
+  const overlayLeft = isMobile
+    ? 0
+    : isNext
+      ? visiblePagesLength === 2
+        ? width
+        : 0
+      : 0;
+
+  const transformOrigin = isNext ? "left center" : "right center";
+
+  const transform = isTurning
+    ? isNext
+      ? "rotateY(-155deg)"
+      : "rotateY(155deg)"
+    : "rotateY(0deg)";
+
+  return (
+    <div
+      className="pointer-events-none absolute top-0 z-40"
+      style={{
+        left: overlayLeft,
+        width,
+        height,
+        perspective: "1600px",
+      }}
+    >
+      <div
+        className="relative h-full w-full overflow-hidden rounded-sm border border-slate-300 bg-[#fffdf7] shadow-2xl"
+        style={{
+          transform,
+          transformOrigin,
+          transition: "transform 420ms cubic-bezier(0.2, 0.72, 0.25, 1)",
+          transformStyle: "preserve-3d",
+          backfaceVisibility: "hidden",
+        }}
+      >
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-black/20 to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-black/20 to-transparent" />
+
+        <div className="flex h-[calc(100%-33px)] items-center justify-center bg-[#fffdf7] p-3">
+          {animation.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              alt={`${title} halaman ${animation.pageNumber}`}
+              className="max-h-full max-w-full select-none object-contain"
+              draggable={false}
+              src={animation.imageUrl}
+            />
+          ) : (
+            <div className="text-sm font-semibold text-slate-500">
+              Halaman {animation.pageNumber}
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-slate-200 bg-[#fffdf7] px-4 py-2 text-center text-xs font-semibold text-slate-500">
+          Halaman {animation.pageNumber}
+        </div>
+
+        <div
+          className="absolute inset-0 bg-black/20"
+          style={{
+            opacity: isTurning ? 0.24 : 0,
+            transition: "opacity 420ms ease",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function FlipBookReader({ pdfUrl, title }) {
   const readerRef = useRef(null);
   const pdfDocumentRef = useRef(null);
@@ -113,6 +197,7 @@ export function FlipBookReader({ pdfUrl, title }) {
   const [error, setError] = useState("");
   const [zoom, setZoom] = useState(1);
   const [turning, setTurning] = useState("");
+  const [flipAnimation, setFlipAnimation] = useState(null);
 
   const canRead = totalPages > 0 && !loading && !error;
 
@@ -441,18 +526,52 @@ export function FlipBookReader({ pdfUrl, title }) {
     preloadPages.forEach((item, index) => {
       window.setTimeout(() => {
         renderPage(item, token);
-      }, index * 20);
+      }, index * 15);
     });
+
+    const activeVisiblePages = isMobile
+      ? [currentPage]
+      : currentPage === 1
+        ? [1]
+        : [currentPage, currentPage + 1].filter(
+            (item) => item <= totalPages,
+          );
+
+    const animatedPageNumber =
+      direction === "next"
+        ? activeVisiblePages[activeVisiblePages.length - 1]
+        : activeVisiblePages[0];
 
     setTurning(direction);
 
+    setFlipAnimation({
+      direction,
+      pageNumber: animatedPageNumber,
+      imageUrl: pageImages[animatedPageNumber],
+      phase: "start",
+    });
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setFlipAnimation((animation) =>
+          animation
+            ? {
+                ...animation,
+                phase: "turning",
+              }
+            : animation,
+        );
+      });
+    });
+
     window.setTimeout(() => {
       setCurrentPage(pageNumber);
+    }, 210);
 
-      window.setTimeout(() => {
-        setTurning("");
-      }, 140);
-    }, 120);
+    window.setTimeout(() => {
+      setTurning("");
+      setFlipAnimation(null);
+    }, 430);
   }
 
   function goPrev() {
@@ -475,23 +594,15 @@ export function FlipBookReader({ pdfUrl, title }) {
     }
   }
 
-  const spreadStyle = useMemo(() => {
-    const rotate =
-      turning === "next"
-        ? "rotateY(-3deg)"
-        : turning === "prev"
-          ? "rotateY(3deg)"
-          : "rotateY(0deg)";
-
-    return {
-      transform: `scale(${zoom}) ${rotate}`,
+  const spreadStyle = useMemo(
+    () => ({
+      transform: `scale(${zoom})`,
       transformOrigin: "center center",
-      transition: "transform 160ms ease, opacity 160ms ease",
-      opacity: turning ? 0.92 : 1,
+      transition: "transform 160ms ease",
       willChange: "transform",
-      backfaceVisibility: "hidden",
-    };
-  }, [turning, zoom]);
+    }),
+    [zoom],
+  );
 
   const atStart = currentPage <= 1;
   const atEnd = currentPage >= totalPages;
@@ -565,24 +676,35 @@ export function FlipBookReader({ pdfUrl, title }) {
                   <div className="pointer-events-none absolute left-1/2 top-4 z-30 h-[calc(100%-2rem)] w-[2px] -translate-x-1/2 bg-gradient-to-b from-transparent via-black/30 to-transparent" />
                 ) : null}
 
-                <div
-                  className={[
-                    "flex items-center justify-center",
-                    visiblePages.length === 2 ? "gap-0" : "",
-                  ].join(" ")}
-                  style={spreadStyle}
-                >
-                  {visiblePages.map((pageNumber, index) => (
-                    <BookPage
-                      key={pageNumber}
-                      pageNumber={pageNumber}
-                      imageUrl={pageImages[pageNumber]}
-                      title={title}
-                      width={width}
-                      height={height}
-                      isCover={pageNumber === 1 || index === 0}
-                    />
-                  ))}
+                <div className="relative">
+                  <div
+                    className={[
+                      "flex items-center justify-center",
+                      visiblePages.length === 2 ? "gap-0" : "",
+                    ].join(" ")}
+                    style={spreadStyle}
+                  >
+                    {visiblePages.map((pageNumber, index) => (
+                      <BookPage
+                        key={pageNumber}
+                        pageNumber={pageNumber}
+                        imageUrl={pageImages[pageNumber]}
+                        title={title}
+                        width={width}
+                        height={height}
+                        isCover={pageNumber === 1 || index === 0}
+                      />
+                    ))}
+                  </div>
+
+                  <FlipOverlay
+                    animation={flipAnimation}
+                    title={title}
+                    width={width}
+                    height={height}
+                    isMobile={isMobile}
+                    visiblePagesLength={visiblePages.length}
+                  />
                 </div>
               </div>
 
