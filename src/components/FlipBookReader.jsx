@@ -108,7 +108,6 @@ function FlipOverlay({
   if (!animation) return null;
 
   const isNext = animation.direction === "next";
-  const isTurning = animation.phase === "turning";
 
   const overlayLeft = isMobile
     ? 0
@@ -119,64 +118,118 @@ function FlipOverlay({
       : 0;
 
   const transformOrigin = isNext ? "left center" : "right center";
-
-  const transform = isTurning
-    ? isNext
-      ? "rotateY(-155deg)"
-      : "rotateY(155deg)"
-    : "rotateY(0deg)";
+  const animationName = isNext ? "bookFlipNext" : "bookFlipPrev";
 
   return (
     <div
-      className="pointer-events-none absolute top-0 z-40"
+      className="pointer-events-none absolute top-0 z-50"
       style={{
         left: overlayLeft,
         width,
         height,
-        perspective: "1600px",
+        perspective: "1800px",
       }}
     >
       <div
-        className="relative h-full w-full overflow-hidden rounded-sm border border-slate-300 bg-[#fffdf7] shadow-2xl"
+        className="relative h-full w-full"
         style={{
-          transform,
           transformOrigin,
-          transition: "transform 420ms cubic-bezier(0.2, 0.72, 0.25, 1)",
           transformStyle: "preserve-3d",
-          backfaceVisibility: "hidden",
+          animation: `${animationName} 620ms cubic-bezier(0.22, 0.72, 0.22, 1) forwards`,
+          willChange: "transform",
         }}
       >
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-black/20 to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-black/20 to-transparent" />
+        <div
+          className="absolute inset-0 overflow-hidden rounded-sm border border-slate-300 bg-[#fffdf7] shadow-2xl"
+          style={{
+            backfaceVisibility: "hidden",
+          }}
+        >
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-black/25 to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-black/25 to-transparent" />
 
-        <div className="flex h-[calc(100%-33px)] items-center justify-center bg-[#fffdf7] p-3">
-          {animation.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              alt={`${title} halaman ${animation.pageNumber}`}
-              className="max-h-full max-w-full select-none object-contain"
-              draggable={false}
-              src={animation.imageUrl}
-            />
-          ) : (
-            <div className="text-sm font-semibold text-slate-500">
-              Halaman {animation.pageNumber}
-            </div>
-          )}
-        </div>
+          <div className="flex h-[calc(100%-33px)] items-center justify-center bg-[#fffdf7] p-3">
+            {animation.frontImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                alt={`${title} halaman ${animation.frontPageNumber}`}
+                className="max-h-full max-w-full select-none object-contain"
+                draggable={false}
+                src={animation.frontImageUrl}
+              />
+            ) : (
+              <div className="text-sm font-semibold text-slate-500">
+                Halaman {animation.frontPageNumber}
+              </div>
+            )}
+          </div>
 
-        <div className="border-t border-slate-200 bg-[#fffdf7] px-4 py-2 text-center text-xs font-semibold text-slate-500">
-          Halaman {animation.pageNumber}
+          <div className="border-t border-slate-200 bg-[#fffdf7] px-4 py-2 text-center text-xs font-semibold text-slate-500">
+            Halaman {animation.frontPageNumber}
+          </div>
         </div>
 
         <div
-          className="absolute inset-0 bg-black/20"
+          className="absolute inset-0 overflow-hidden rounded-sm border border-slate-300 bg-[#fffdf7] shadow-2xl"
           style={{
-            opacity: isTurning ? 0.24 : 0,
-            transition: "opacity 420ms ease",
+            transform: "rotateY(180deg)",
+            backfaceVisibility: "hidden",
           }}
-        />
+        >
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-black/25 to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-black/25 to-transparent" />
+
+          <div className="flex h-[calc(100%-33px)] items-center justify-center bg-[#fffdf7] p-3">
+            {animation.backImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                alt={`${title} halaman ${animation.backPageNumber}`}
+                className="max-h-full max-w-full select-none object-contain"
+                draggable={false}
+                src={animation.backImageUrl}
+              />
+            ) : (
+              <div className="text-sm font-semibold text-slate-500">
+                Halaman {animation.backPageNumber}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-slate-200 bg-[#fffdf7] px-4 py-2 text-center text-xs font-semibold text-slate-500">
+            Halaman {animation.backPageNumber}
+          </div>
+        </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes bookFlipNext {
+          0% {
+            transform: rotateY(0deg);
+            filter: brightness(1);
+          }
+          45% {
+            filter: brightness(0.92);
+          }
+          100% {
+            transform: rotateY(-180deg);
+            filter: brightness(1);
+          }
+        }
+
+        @keyframes bookFlipPrev {
+          0% {
+            transform: rotateY(0deg);
+            filter: brightness(1);
+          }
+          45% {
+            filter: brightness(0.92);
+          }
+          100% {
+            transform: rotateY(180deg);
+            filter: brightness(1);
+          }
+        }
+      `}</style>
     </div>
   );
 }
@@ -526,52 +579,49 @@ export function FlipBookReader({ pdfUrl, title }) {
     preloadPages.forEach((item, index) => {
       window.setTimeout(() => {
         renderPage(item, token);
-      }, index * 15);
+      }, index * 10);
     });
 
     const activeVisiblePages = isMobile
       ? [currentPage]
       : currentPage === 1
         ? [1]
-        : [currentPage, currentPage + 1].filter(
-            (item) => item <= totalPages,
-          );
+        : [currentPage, currentPage + 1].filter((item) => item <= totalPages);
 
-    const animatedPageNumber =
+    const targetVisiblePages = isMobile
+      ? [pageNumber]
+      : pageNumber === 1
+        ? [1]
+        : [pageNumber, pageNumber + 1].filter((item) => item <= totalPages);
+
+    const frontPageNumber =
       direction === "next"
         ? activeVisiblePages[activeVisiblePages.length - 1]
         : activeVisiblePages[0];
+
+    const backPageNumber =
+      direction === "next"
+        ? targetVisiblePages[0]
+        : targetVisiblePages[targetVisiblePages.length - 1];
 
     setTurning(direction);
 
     setFlipAnimation({
       direction,
-      pageNumber: animatedPageNumber,
-      imageUrl: pageImages[animatedPageNumber],
-      phase: "start",
-    });
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setFlipAnimation((animation) =>
-          animation
-            ? {
-                ...animation,
-                phase: "turning",
-              }
-            : animation,
-        );
-      });
+      frontPageNumber,
+      frontImageUrl: pageImages[frontPageNumber],
+      backPageNumber,
+      backImageUrl: pageImages[backPageNumber],
     });
 
     window.setTimeout(() => {
       setCurrentPage(pageNumber);
-    }, 210);
+    }, 520);
 
     window.setTimeout(() => {
       setTurning("");
       setFlipAnimation(null);
-    }, 430);
+    }, 650);
   }
 
   function goPrev() {
@@ -669,8 +719,8 @@ export function FlipBookReader({ pdfUrl, title }) {
               </button>
 
               <div
-                className="relative flex max-w-full items-center justify-center overflow-hidden"
-                style={{ perspective: "1600px" }}
+                className="relative flex max-w-full items-center justify-center overflow-visible"
+                style={{ perspective: "1800px" }}
               >
                 {!isMobile && visiblePages.length === 2 ? (
                   <div className="pointer-events-none absolute left-1/2 top-4 z-30 h-[calc(100%-2rem)] w-[2px] -translate-x-1/2 bg-gradient-to-b from-transparent via-black/30 to-transparent" />
