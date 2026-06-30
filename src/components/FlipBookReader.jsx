@@ -69,28 +69,27 @@ function useReaderSize() {
 }
 
 const BookPage = forwardRef(function BookPage(
-  { pageNumber, imageUrl, title, width, height, isCover },
+  { pageNumber, imageUrl, title, isCover },
   ref,
 ) {
   return (
     <div
       ref={ref}
-      className={[
-        "relative flex shrink-0 flex-col justify-between overflow-hidden bg-[#fffdf7]",
-        "border border-slate-300 shadow-2xl",
-        isCover ? "rounded-r-md" : "rounded-sm",
-      ].join(" ")}
-      style={{ width, height }}
+      className="relative h-full w-full overflow-hidden bg-[#fffdf7]"
     >
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-black/10 to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-black/10 to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-black/12 via-black/5 to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-black/10 via-black/4 to-transparent" />
 
-      <div className="flex min-h-0 flex-1 items-center justify-center bg-[#fffdf7] p-3">
+      {isCover ? (
+        <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-br from-white/10 via-transparent to-black/10" />
+      ) : null}
+
+      <div className="flex h-[calc(100%-30px)] w-full items-center justify-center bg-[#fffdf7] p-2">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             alt={`${title} halaman ${pageNumber}`}
-            className="max-h-full max-w-full select-none object-contain"
+            className="h-full w-full select-none object-contain"
             draggable={false}
             src={imageUrl}
           />
@@ -102,7 +101,7 @@ const BookPage = forwardRef(function BookPage(
         )}
       </div>
 
-      <div className="border-t border-slate-200 bg-[#fffdf7] px-4 py-2 text-center text-xs font-semibold text-slate-500">
+      <div className="h-[30px] border-t border-slate-200 bg-[#fffdf7] px-4 py-2 text-center text-xs font-semibold text-slate-500">
         Halaman {pageNumber}
       </div>
     </div>
@@ -415,11 +414,39 @@ export function FlipBookReader({ pdfUrl, title }) {
     totalPages,
   ]);
 
+  function isPageReady(pageNumber) {
+    return Boolean(pageImages[pageNumber]);
+  }
+
+  function getNextTargetPage() {
+    return Math.min(currentPage + (isMobile ? 1 : 2), totalPages);
+  }
+
+  function getPrevTargetPage() {
+    return Math.max(currentPage - (isMobile ? 1 : 2), 1);
+  }
+
   function goPrev() {
+    const targetPage = getPrevTargetPage();
+
+    if (!isPageReady(targetPage)) {
+      const token = renderTokenRef.current;
+      renderPage(targetPage, token);
+      return;
+    }
+
     bookRef.current?.pageFlip()?.flipPrev();
   }
 
   function goNext() {
+    const targetPage = getNextTargetPage();
+
+    if (!isPageReady(targetPage)) {
+      const token = renderTokenRef.current;
+      renderPage(targetPage, token);
+      return;
+    }
+
     bookRef.current?.pageFlip()?.flipNext();
   }
 
@@ -458,7 +485,7 @@ export function FlipBookReader({ pdfUrl, title }) {
           <h2 className="mt-2 text-2xl font-bold text-white">{title}</h2>
         </div>
 
-        <div className="relative mx-auto flex min-h-[560px] items-center justify-center overflow-auto rounded-2xl border border-slate-700 bg-[radial-gradient(circle_at_center,#334155_0%,#0f172a_70%)] p-4 shadow-inner sm:min-h-[720px]">
+        <div className="relative mx-auto flex min-h-[560px] items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-[radial-gradient(circle_at_center,#334155_0%,#0f172a_70%)] p-4 shadow-inner sm:min-h-[720px]">
           {loading ? (
             <div className="rounded-lg border border-white/10 bg-slate-950/70 px-6 py-5 text-center text-sm font-semibold text-slate-200">
               <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-700 border-t-emerald-400" />
@@ -528,15 +555,18 @@ export function FlipBookReader({ pdfUrl, title }) {
                     minHeight={390}
                     maxHeight={740}
                     autoSize={false}
-                    className="mx-auto"
+                    className="mx-auto overflow-hidden rounded-sm bg-[#fffdf7] shadow-[0_18px_45px_rgba(0,0,0,0.28)]"
                     drawShadow
-                    flippingTime={950}
-                    maxShadowOpacity={0.45}
-                    mobileScrollSupport
-                    showCover={!isMobile}
+                    flippingTime={1350}
+                    maxShadowOpacity={0.22}
+                    mobileScrollSupport={false}
+                    showCover={false}
+                    showPageCorners
+                    useMouseEvents
+                    clickEventForward
                     usePortrait={isMobile}
                     startPage={0}
-                    startZIndex={10}
+                    startZIndex={30}
                     onFlip={(event) => {
                       setCurrentPage(event.data + 1);
                     }}
@@ -550,8 +580,6 @@ export function FlipBookReader({ pdfUrl, title }) {
                           pageNumber={pageNumber}
                           imageUrl={pageImages[pageNumber]}
                           title={title}
-                          width={width}
-                          height={height}
                           isCover={pageNumber === 1}
                         />
                       );
