@@ -63,7 +63,15 @@ function useReaderSize() {
   return reader;
 }
 
-function BookPage({ pageNumber, imageUrl, title, width, height, isCover }) {
+function BookPage({
+  pageNumber,
+  imageUrl,
+  title,
+  width,
+  height,
+  isCover,
+  isHiddenDuringFlip = false,
+}) {
   return (
     <div
       className={[
@@ -71,7 +79,11 @@ function BookPage({ pageNumber, imageUrl, title, width, height, isCover }) {
         "border border-slate-300 shadow-2xl",
         isCover ? "rounded-r-md" : "rounded-sm",
       ].join(" ")}
-      style={{ width, height }}
+      style={{
+        width,
+        height,
+        visibility: isHiddenDuringFlip ? "hidden" : "visible",
+      }}
     >
       <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-black/10 to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-black/10 to-transparent" />
@@ -112,10 +124,13 @@ function FlipOverlay({
 
   const isNext = animation.direction === "next";
 
+  const stableVisiblePagesLength =
+    animation.visiblePagesLength ?? visiblePagesLength;
+
   const overlayLeft = isMobile
     ? 0
     : isNext
-      ? visiblePagesLength === 2
+      ? stableVisiblePagesLength === 2
         ? width
         : 0
       : 0;
@@ -647,6 +662,8 @@ export function FlipBookReader({ pdfUrl, title }) {
 
     setFlipAnimation({
       direction,
+      phase: "front",
+      visiblePagesLength: activeVisiblePages.length,
       frontPageNumber,
       frontImageUrl: pageImages[frontPageNumber],
       backPageNumber,
@@ -655,6 +672,15 @@ export function FlipBookReader({ pdfUrl, title }) {
 
     window.setTimeout(() => {
       setCurrentPage(pageNumber);
+
+      setFlipAnimation((currentAnimation) =>
+        currentAnimation
+          ? {
+              ...currentAnimation,
+              phase: "back",
+            }
+          : currentAnimation,
+      );
     }, FLIP_SWAP_TIME);
 
     window.setTimeout(() => {
@@ -695,6 +721,16 @@ export function FlipBookReader({ pdfUrl, title }) {
 
   const atStart = currentPage <= 1;
   const atEnd = currentPage >= totalPages;
+
+  function shouldHidePageDuringFlip(pageNumber) {
+    if (!flipAnimation) return false;
+
+    if (flipAnimation.phase === "back") {
+      return pageNumber === flipAnimation.backPageNumber;
+    }
+
+    return pageNumber === flipAnimation.frontPageNumber;
+  }
 
   return (
     <section
@@ -782,6 +818,7 @@ export function FlipBookReader({ pdfUrl, title }) {
                         width={width}
                         height={height}
                         isCover={pageNumber === 1 || index === 0}
+                        isHiddenDuringFlip={shouldHidePageDuringFlip(pageNumber)}
                       />
                     ))}
                   </div>
