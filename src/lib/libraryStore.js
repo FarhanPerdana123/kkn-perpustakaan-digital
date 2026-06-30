@@ -94,12 +94,42 @@ function normalizeHelpLinks(links) {
     .filter((link) => link.label && link.description);
 }
 
+function normalizeBook(book) {
+  const categories = Array.isArray(book.categories) ? book.categories : [];
+  const legacyCategory =
+    book.category || book.categoryId
+      ? {
+          id: book.categoryId || createSlug(book.category),
+          name: book.category,
+        }
+      : null;
+  const normalizedCategories = categories.length
+    ? categories
+    : legacyCategory
+      ? [legacyCategory]
+      : [];
+
+  return {
+    ...book,
+    categories: normalizedCategories,
+    category: normalizedCategories.map((category) => category.name).join(", "),
+    categoryIds: normalizedCategories
+      .map((category) => category.id)
+      .filter(Boolean),
+    readerId: book.slug || book.id,
+  };
+}
+
 export async function getBooks() {
   const sanityBooks = await fetchFromSanity(`*[_type == "book"] | order(_createdAt desc) {
     "id": _id,
     "slug": slug.current,
     "title": coalesce(title, ""),
     "author": coalesce(author, ""),
+    "categories": categories[]->{
+      "id": slug.current,
+      "name": coalesce(name, "")
+    },
     "category": coalesce(category->name, ""),
     "categoryId": category->slug.current,
     "year": coalesce(year, ""),
@@ -113,10 +143,7 @@ export async function getBooks() {
     return [];
   }
 
-  return sanityBooks.map((book) => ({
-    ...book,
-    readerId: book.slug || book.id,
-  }));
+  return sanityBooks.map(normalizeBook);
 }
 
 export async function getBookByReaderId(readerId) {
@@ -128,6 +155,10 @@ export async function getBookByReaderId(readerId) {
       "slug": slug.current,
       "title": coalesce(title, ""),
       "author": coalesce(author, ""),
+      "categories": categories[]->{
+        "id": slug.current,
+        "name": coalesce(name, "")
+      },
       "category": coalesce(category->name, ""),
       "categoryId": category->slug.current,
       "year": coalesce(year, ""),
@@ -143,10 +174,7 @@ export async function getBookByReaderId(readerId) {
     return null;
   }
 
-  return {
-    ...sanityBook,
-    readerId: sanityBook.slug || sanityBook.id,
-  };
+  return normalizeBook(sanityBook);
 }
 
 export async function getCategories() {
@@ -181,7 +209,8 @@ export async function getBooksByCategoryId(categoryId) {
   }
 
   return books.filter(
-    (book) => book.categoryId === category.id || book.category === category.name,
+    (book) =>
+      book.categoryIds?.includes(category.id) || book.category === category.name,
   );
 }
 

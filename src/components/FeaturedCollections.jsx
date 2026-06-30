@@ -59,9 +59,22 @@ export function FeaturedCollections({
                 )}
               </div>
               <div className="p-5">
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-800">
-                  {item.category || "Buku"}
-                </span>
+                <div className="flex flex-wrap gap-2">
+                  {item.categories?.length ? (
+                    item.categories.map((category) => (
+                      <span
+                        className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-800"
+                        key={category.id || category.name}
+                      >
+                        {category.name}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-800">
+                      Buku
+                    </span>
+                  )}
+                </div>
                 <h3 className="mt-4 text-lg font-bold leading-6 text-slate-950">
                   {item.title}
                 </h3>

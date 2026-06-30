@@ -25,11 +25,25 @@ export const book = defineType({
       type: "string",
     }),
     defineField({
+      name: "categories",
+      title: "Kategori / Genre",
+      type: "array",
+      of: [
+        {
+          type: "reference",
+          to: [{ type: "category" }],
+        },
+      ],
+      validation: (Rule) => Rule.required().min(1),
+    }),
+    defineField({
       name: "category",
-      title: "Kategori",
+      title: "Kategori Lama",
       type: "reference",
       to: [{ type: "category" }],
-      validation: (Rule) => Rule.required(),
+      hidden: true,
+      description:
+        "Field lama untuk kompatibilitas data. Gunakan Kategori / Genre.",
     }),
     defineField({
       name: "year",
@@ -62,8 +76,20 @@ export const book = defineType({
   preview: {
     select: {
       title: "title",
-      subtitle: "category.name",
+      categories: "categories",
       media: "cover",
+    },
+    prepare({ title, categories, media }) {
+      const categoryCount = Array.isArray(categories) ? categories.length : 0;
+
+      return {
+        title,
+        subtitle:
+          categoryCount > 0
+            ? `${categoryCount} kategori / genre`
+            : "Belum ada kategori",
+        media,
+      };
     },
   },
 });

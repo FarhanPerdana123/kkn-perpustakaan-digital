@@ -95,11 +95,14 @@ export default async function BookReaderPage({ params }) {
                 {book.title}
               </h1>
               <div className="mt-4 flex flex-wrap gap-2 text-sm font-semibold text-slate-600">
-                {book.category ? (
-                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-800">
-                    {book.category}
+                {book.categories?.map((category) => (
+                  <span
+                    className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-800"
+                    key={category.id || category.name}
+                  >
+                    {category.name}
                   </span>
-                ) : null}
+                ))}
                 {book.year ? (
                   <span className="rounded-full bg-slate-100 px-3 py-1">
                     {book.year}
