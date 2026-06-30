@@ -67,7 +67,7 @@ export default async function CategoryPage({ params }) {
 
         <FeaturedCollections
           books={books}
-          emptyDescription="Buku dapat ditambahkan melalui dashboard admin dengan memilih kategori ini."
+          emptyDescription="Buku dapat ditambahkan melalui Sanity Studio dengan memilih kategori ini."
           emptyTitle={`Belum ada buku untuk kategori ${category.name}.`}
           eyebrow="Daftar Buku"
           showAction={false}

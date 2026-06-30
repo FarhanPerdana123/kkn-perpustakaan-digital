@@ -7,7 +7,7 @@ export function FeaturedCollections({
   eyebrow = "Koleksi Buku Pilihan",
   title = "Buku digital yang sering dibaca warga.",
   emptyTitle = "Belum ada buku yang di-upload.",
-  emptyDescription = "Buku yang ditambahkan lewat halaman admin akan otomatis tampil di bagian ini.",
+  emptyDescription = "Buku yang ditambahkan lewat Sanity Studio akan otomatis tampil di bagian ini.",
   actionHref = "/koleksi",
   actionLabel = "Lihat semua koleksi",
   showAction = true,

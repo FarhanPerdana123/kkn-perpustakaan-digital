@@ -38,7 +38,7 @@ export default async function CollectionPage() {
               Seluruh buku digital perpustakaan.
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-              Semua buku yang ditambahkan melalui dashboard admin akan tampil di
+              Semua buku yang ditambahkan melalui Sanity Studio akan tampil di
               halaman ini.
             </p>
           </div>
@@ -46,7 +46,7 @@ export default async function CollectionPage() {
 
         <FeaturedCollections
           books={books}
-          emptyDescription="Tambahkan buku melalui dashboard admin agar koleksi dapat dibaca warga."
+          emptyDescription="Tambahkan buku melalui Sanity Studio agar koleksi dapat dibaca warga."
           emptyTitle="Belum ada koleksi buku."
           eyebrow="Daftar Buku"
           showAction={false}
