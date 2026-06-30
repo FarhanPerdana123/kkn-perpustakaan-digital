@@ -1,10 +1,10 @@
 import Link from "next/link";
 
 const defaultFooter = {
-  title: "Perpustakaan Digital Desa Sukamaju",
-  address: "Kantor Desa Sukamaju, Kecamatan Harapan",
+  title: "Perpustakaan Digital Desa Podosoko",
+  address: "Kantor Desa Podosoko",
   phone: "Telepon: (021) 555-0198",
-  email: "Email: perpus@sukamaju.desa.id",
+  email: "Email: perpus@podosoko.desa.id",
   helpTitle: "Bantuan",
   helpLinks: [
     { label: "Kebijakan Privasi" },
@@ -13,9 +13,9 @@ const defaultFooter = {
   ],
   socialTitle: "Media Sosial Desa",
   socialLinks: [
-    { label: "Facebook", href: "https://facebook.com/desasukamaju" },
-    { label: "Instagram", href: "https://instagram.com/desasukamaju" },
-    { label: "YouTube", href: "https://youtube.com/@desasukamaju" },
+    { label: "Facebook", href: "https://facebook.com/desapodosoko" },
+    { label: "Instagram", href: "https://instagram.com/desapodosoko" },
+    { label: "YouTube", href: "https://youtube.com/@desapodosoko" },
   ],
   copyright: "Copyright 2026 Desa Podosoko.",
 };

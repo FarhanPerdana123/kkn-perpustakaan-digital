@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Perpustakaan Digital Desa Sukamaju",
+  title: "Perpustakaan Digital Desa Podosoko",
   description:
     "Perpustakaan digital desa untuk membaca buku pelajaran, modul, cerita, dan referensi warga secara online.",
 };
