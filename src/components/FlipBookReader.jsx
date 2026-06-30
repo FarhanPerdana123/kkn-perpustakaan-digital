@@ -477,13 +477,19 @@ export function FlipBookReader({ pdfUrl, title }) {
 
   const spreadStyle = useMemo(() => {
     const rotate =
-      turning === "next" ? "rotateY(-5deg)" : turning === "prev" ? "rotateY(5deg)" : "rotateY(0deg)";
+      turning === "next"
+        ? "rotateY(-3deg)"
+        : turning === "prev"
+          ? "rotateY(3deg)"
+          : "rotateY(0deg)";
 
     return {
       transform: `scale(${zoom}) ${rotate}`,
       transformOrigin: "center center",
-      transition: "transform 180ms ease, opacity 180ms ease",
-      opacity: turning ? 0.88 : 1,
+      transition: "transform 160ms ease, opacity 160ms ease",
+      opacity: turning ? 0.92 : 1,
+      willChange: "transform",
+      backfaceVisibility: "hidden",
     };
   }, [turning, zoom]);
 
@@ -503,7 +509,7 @@ export function FlipBookReader({ pdfUrl, title }) {
           <h2 className="mt-2 text-2xl font-bold text-white">{title}</h2>
         </div>
 
-        <div className="relative mx-auto flex min-h-[560px] items-center justify-center overflow-auto rounded-2xl border border-slate-700 bg-[radial-gradient(circle_at_center,#334155_0%,#0f172a_70%)] p-4 shadow-inner sm:min-h-[720px]">
+        <div className="relative mx-auto flex min-h-[560px] items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-[radial-gradient(circle_at_center,#334155_0%,#0f172a_70%)] p-4 shadow-inner sm:min-h-[720px]">
           {loading ? (
             <div className="rounded-lg border border-white/10 bg-slate-950/70 px-6 py-5 text-center text-sm font-semibold text-slate-200">
               <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-700 border-t-emerald-400" />
@@ -551,7 +557,10 @@ export function FlipBookReader({ pdfUrl, title }) {
                 <ChevronLeft className="h-7 w-7" />
               </button>
 
-              <div className="relative" style={{ perspective: "1600px" }}>
+              <div
+                className="relative flex max-w-full items-center justify-center overflow-hidden"
+                style={{ perspective: "1600px" }}
+              >
                 {!isMobile && visiblePages.length === 2 ? (
                   <div className="pointer-events-none absolute left-1/2 top-4 z-30 h-[calc(100%-2rem)] w-[2px] -translate-x-1/2 bg-gradient-to-b from-transparent via-black/30 to-transparent" />
                 ) : null}
@@ -598,7 +607,7 @@ export function FlipBookReader({ pdfUrl, title }) {
             onNext={goNext}
             onPrev={goPrev}
             onResetZoom={() => setZoom(1)}
-            onZoomIn={() => setZoom((value) => Math.min(value + 0.1, 1.4))}
+            onZoomIn={() => setZoom((value) => Math.min(value + 0.1, 1.15))}
             onZoomOut={() => setZoom((value) => Math.max(value - 0.1, 0.75))}
             totalPages={canRead ? totalPages : 1}
             zoom={zoom}
