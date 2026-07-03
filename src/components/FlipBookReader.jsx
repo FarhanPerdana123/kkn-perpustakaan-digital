@@ -16,7 +16,7 @@ import { ReaderToolbar } from "./ReaderToolbar";
 const pdfJsUrl = "/pdfjs/pdf.mjs";
 const pdfWorkerUrl = "/pdfjs/pdf.worker.min.mjs";
 
-function useReaderSize() {
+function useReaderSize(isFullscreen = false) {
   const [reader, setReader] = useState({
     width: 420,
     height: 596,
@@ -36,13 +36,28 @@ function useReaderSize() {
         const viewportHeight = window.innerHeight;
         const isMobile = viewportWidth < 768;
 
+        const maxPageWidth = isFullscreen
+          ? Math.floor((viewportWidth - (isMobile ? 36 : 150)) / (isMobile ? 1 : 2))
+          : isMobile
+            ? viewportWidth - 36
+            : Math.floor((viewportWidth - 260) / 2);
+        const maxPageWidthByHeight = Math.floor(
+          (viewportHeight - (isFullscreen ? 32 : isMobile ? 220 : 120)) / 1.42,
+        );
+
         const pageWidth = isMobile
-          ? Math.max(280, Math.min(viewportWidth - 36, 390))
-          : Math.max(340, Math.min(Math.floor((viewportWidth - 260) / 2), 430));
+          ? Math.max(
+              280,
+              Math.min(maxPageWidth, maxPageWidthByHeight, isFullscreen ? 520 : 390),
+            )
+          : Math.max(
+              340,
+              Math.min(maxPageWidth, maxPageWidthByHeight, isFullscreen ? 620 : 430),
+            );
 
         const pageHeight = Math.min(
           Math.round(pageWidth * 1.42),
-          isMobile ? viewportHeight - 220 : 640,
+          isFullscreen ? viewportHeight - 32 : isMobile ? viewportHeight - 220 : 640,
         );
 
         setReader({
@@ -63,7 +78,7 @@ function useReaderSize() {
 
       window.removeEventListener("resize", updateSize);
     };
-  }, []);
+  }, [isFullscreen]);
 
   return reader;
 }
@@ -195,19 +210,20 @@ export function FlipBookReader({ pdfUrl, title }) {
   const pendingPagesRef = useRef(new Set());
   const renderTokenRef = useRef(0);
 
-  const { width, height, isMobile } = useReaderSize();
-
   const [totalPages, setTotalPages] = useState(0);
   const [pageImages, setPageImages] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(Boolean(pdfUrl));
   const [error, setError] = useState("");
   const [zoom, setZoom] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [viewMode, setViewMode] = useState(() =>
     typeof window !== "undefined" && window.innerWidth < 768
       ? "scroll"
       : "flip",
   );
+
+  const { width, height, isMobile } = useReaderSize(isFullscreen);
 
   useEffect(() => {
     if (isMobile) {
@@ -216,6 +232,19 @@ export function FlipBookReader({ pdfUrl, title }) {
       });
     }
   }, [isMobile]);
+
+  useEffect(() => {
+    function syncFullscreenState() {
+      setIsFullscreen(document.fullscreenElement === readerRef.current);
+    }
+
+    syncFullscreenState();
+    document.addEventListener("fullscreenchange", syncFullscreenState);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", syncFullscreenState);
+    };
+  }, []);
 
   const canRead = totalPages > 0 && !loading && !error;
   const atStart = currentPage <= 1;
@@ -604,11 +633,13 @@ export function FlipBookReader({ pdfUrl, title }) {
 
   return (
     <section
-      className="flipbook-reader bg-slate-950 px-3 py-8 text-white sm:px-6 lg:px-8"
+      className={`flipbook-reader bg-slate-950 text-white ${
+        isFullscreen ? "h-screen overflow-hidden p-0" : "px-3 py-8 sm:px-6 lg:px-8"
+      }`}
       ref={readerRef}
     >
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-6 text-center">
+      <div className={isFullscreen ? "h-full w-full" : "mx-auto max-w-7xl"}>
+        <div className={isFullscreen ? "hidden" : "mb-6 text-center"}>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">
             Reader Buku Digital
           </p>
@@ -642,7 +673,13 @@ export function FlipBookReader({ pdfUrl, title }) {
           </div>
         </div>
 
-        <div className="relative mx-auto flex min-h-[560px] items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-[radial-gradient(circle_at_center,#334155_0%,#0f172a_70%)] p-4 shadow-inner [scrollbar-width:none] sm:min-h-[720px]">
+        <div
+          className={`relative mx-auto flex items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_center,#334155_0%,#0f172a_70%)] [scrollbar-width:none] ${
+            isFullscreen
+              ? "h-screen w-screen rounded-none border-0 p-0 shadow-none"
+              : "min-h-[560px] rounded-2xl border border-slate-700 p-4 shadow-inner sm:min-h-[720px]"
+          }`}
+        >
           {loading ? (
             <div className="rounded-lg border border-white/10 bg-slate-950/70 px-6 py-5 text-center text-sm font-semibold text-slate-200">
               <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-700 border-t-emerald-400" />
@@ -710,9 +747,9 @@ export function FlipBookReader({ pdfUrl, title }) {
                         height={height}
                         size="fixed"
                         minWidth={280}
-                        maxWidth={520}
+                        maxWidth={isFullscreen ? 760 : 520}
                         minHeight={390}
-                        maxHeight={740}
+                        maxHeight={isFullscreen ? 1080 : 740}
                         autoSize={false}
                         className={`mx-auto overflow-hidden rounded-sm shadow-[0_18px_45px_rgba(0,0,0,0.28)] ${
                           isFrontCoverView
@@ -762,7 +799,13 @@ export function FlipBookReader({ pdfUrl, title }) {
                   </button>
                 </>
               ) : (
-                <div className="h-[72vh] w-full overflow-y-auto overflow-x-hidden rounded-xl bg-slate-950/50 px-3 py-6 [scrollbar-width:thin] md:px-6">
+                <div
+                  className={`w-full overflow-y-auto overflow-x-hidden bg-slate-950/50 [scrollbar-width:thin] ${
+                    isFullscreen
+                      ? "h-screen rounded-none px-0 py-0"
+                      : "h-[72vh] rounded-xl px-3 py-6 md:px-6"
+                  }`}
+                >
                   {Array.from({ length: totalPages }, (_, index) => {
                     const pageNumber = index + 1;
 
@@ -784,7 +827,7 @@ export function FlipBookReader({ pdfUrl, title }) {
           )}
         </div>
 
-        <div className="mx-auto mt-5 max-w-4xl">
+        <div className={isFullscreen ? "hidden" : "mx-auto mt-5 max-w-4xl"}>
           <ReaderToolbar
             currentPage={canRead ? currentPage : 1}
             onBack={goBack}
