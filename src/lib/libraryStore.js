@@ -11,6 +11,7 @@ const defaultHero = {
 
 const defaultHeader = {
   logoUrl: "",
+  faviconUrl: "/favicon.ico",
   logoText: "DD",
   title: "Perpustakaan Digital Desa Podosoko",
   subtitle: "Katalog buku digital untuk warga",
@@ -281,6 +282,7 @@ export async function getFooter() {
 export async function getHeader() {
   const sanityHeader = await fetchFromSanity(`*[_type == "siteHeader"][0] {
     "logoUrl": logo.asset->url,
+    "faviconUrl": favicon.asset->url,
     "title": coalesce(title, ""),
     "subtitle": coalesce(subtitle, "")
   }`);
@@ -293,6 +295,10 @@ export async function getHeader() {
     ...defaultHeader,
     ...sanityHeader,
     logoUrl: sanityHeader.logoUrl || defaultHeader.logoUrl,
+    faviconUrl:
+      sanityHeader.faviconUrl ||
+      sanityHeader.logoUrl ||
+      defaultHeader.faviconUrl,
   };
 }
 

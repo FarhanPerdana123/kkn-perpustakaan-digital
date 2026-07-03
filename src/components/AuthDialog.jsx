@@ -1,52 +1,99 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "./AuthProvider";
 
-export function AuthDialog() {
-  const {
-    authOpen,
-    closeAuth,
-    loginWithEmail,
-    signUpWithEmail,
-  } = useAuth();
+const googleScriptId = "google-identity-services";
+const googleScriptSrc = "https://accounts.google.com/gsi/client";
 
-  const [mode, setMode] = useState("login");
-  const [form, setForm] = useState({
-    email: "",
-    name: "",
-    password: "",
-  });
-  const [message, setMessage] = useState("");
+function loadGoogleScript() {
+  if (typeof window === "undefined") return Promise.reject();
 
-  if (!authOpen) return null;
-
-  function updateField(field, value) {
-    setForm((current) => ({
-      ...current,
-      [field]: value,
-    }));
-    setMessage("");
+  if (window.google?.accounts?.id) {
+    return Promise.resolve();
   }
 
-  function submitEmail(event) {
-    event.preventDefault();
+  const existingScript = document.getElementById(googleScriptId);
 
-    const result =
-      mode === "login" ? loginWithEmail(form) : signUpWithEmail(form);
+  if (existingScript) {
+    return new Promise((resolve, reject) => {
+      existingScript.addEventListener("load", resolve, { once: true });
+      existingScript.addEventListener("error", reject, { once: true });
+    });
+  }
 
-    if (!result.ok) {
-      setMessage(result.message);
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.async = true;
+    script.defer = true;
+    script.id = googleScriptId;
+    script.src = googleScriptSrc;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+export function AuthDialog() {
+  const { authOpen, closeAuth, loginWithGoogleCredential } = useAuth();
+  const googleButtonRef = useRef(null);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const configMessage = clientId
+    ? ""
+    : "Google Sign-In belum dikonfigurasi. Tambahkan NEXT_PUBLIC_GOOGLE_CLIENT_ID di .env.local.";
+
+  useEffect(() => {
+    if (!authOpen) return;
+
+    let cancelled = false;
+    if (!clientId) {
       return;
     }
 
-    setMessage("");
-  }
+    loadGoogleScript()
+      .then(() => {
+        if (cancelled || !googleButtonRef.current) return;
 
-  function switchMode() {
-    setMode((current) => (current === "login" ? "signup" : "login"));
-    setMessage("");
-  }
+        window.google.accounts.id.initialize({
+          callback: async (response) => {
+            setLoading(true);
+            setMessage("");
+
+            const result = await loginWithGoogleCredential(response.credential);
+
+            setLoading(false);
+
+            if (!result.ok) {
+              setMessage(result.message);
+            }
+          },
+          client_id: clientId,
+        });
+
+        googleButtonRef.current.innerHTML = "";
+        window.google.accounts.id.renderButton(googleButtonRef.current, {
+          logo_alignment: "left",
+          shape: "rectangular",
+          size: "large",
+          text: "continue_with",
+          theme: "outline",
+          width: 352,
+        });
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setMessage("Script Google Sign-In gagal dimuat. Periksa koneksi.");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authOpen, clientId, loginWithGoogleCredential]);
+
+  if (!authOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 px-4 py-6 backdrop-blur-sm">
@@ -57,7 +104,7 @@ export function AuthDialog() {
               Akun Pembaca
             </p>
             <h2 className="mt-2 text-2xl font-bold text-slate-950">
-              {mode === "login" ? "Login untuk bookmark" : "Buat akun baru"}
+              Login dengan Google
             </h2>
           </div>
 
@@ -71,65 +118,30 @@ export function AuthDialog() {
           </button>
         </div>
 
-        <form className="mt-5 grid gap-3" onSubmit={submitEmail}>
-          {mode === "signup" ? (
-            <label className="grid gap-1 text-sm font-semibold text-slate-700">
-              Nama
-              <input
-                className="rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-700"
-                onChange={(event) => updateField("name", event.target.value)}
-                placeholder="Nama lengkap"
-                type="text"
-                value={form.name}
-              />
-            </label>
-          ) : null}
+        <div className="mt-5 grid gap-4">
+          <div
+            aria-busy={loading}
+            className="min-h-11 w-full"
+            ref={googleButtonRef}
+          />
 
-          <label className="grid gap-1 text-sm font-semibold text-slate-700">
-            Email
-            <input
-              className="rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-700"
-              onChange={(event) => updateField("email", event.target.value)}
-              placeholder="nama@email.com"
-              type="email"
-              value={form.email}
-            />
-          </label>
-
-          <label className="grid gap-1 text-sm font-semibold text-slate-700">
-            Password
-            <input
-              className="rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-700"
-              onChange={(event) => updateField("password", event.target.value)}
-              placeholder="Minimal 6 karakter"
-              type="password"
-              value={form.password}
-            />
-          </label>
-
-          {message ? (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
-              {message}
+          {loading ? (
+            <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">
+              Memverifikasi akun Google...
             </p>
           ) : null}
 
-          <button
-            className="mt-1 rounded-lg bg-emerald-800 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-900"
-            type="submit"
-          >
-            {mode === "login" ? "Login" : "Sign Up"}
-          </button>
-        </form>
+          {configMessage || message ? (
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+              {configMessage || message}
+            </p>
+          ) : null}
 
-        <button
-          className="mt-4 text-sm font-semibold text-emerald-800 hover:text-emerald-950"
-          onClick={switchMode}
-          type="button"
-        >
-          {mode === "login"
-            ? "Belum punya akun? Sign up"
-            : "Sudah punya akun? Login"}
-        </button>
+          <p className="text-sm leading-6 text-slate-600">
+            Sign up dan login hanya menerima akun Google dengan email yang sudah
+            terverifikasi.
+          </p>
+        </div>
       </div>
     </div>
   );

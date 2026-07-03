@@ -12,7 +12,6 @@ import {
 const AuthContext = createContext(null);
 
 const sessionKey = "podosoko_library_session";
-const usersKey = "podosoko_library_users";
 
 function readJson(key, fallback) {
   if (typeof window === "undefined") return fallback;
@@ -49,15 +48,13 @@ function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
 
-function normalizeText(value) {
-  return String(value || "").trim();
-}
-
-function isDemoProviderUser(value) {
+function isVerifiedGoogleUser(value) {
   return (
     value &&
     typeof value.id === "string" &&
-    value.id.endsWith(":demo-user")
+    value.id.startsWith("google:") &&
+    value.provider === "Google" &&
+    value.emailVerified === true
   );
 }
 
@@ -70,7 +67,7 @@ export function AuthProvider({ children }) {
     const timeoutId = window.setTimeout(() => {
       const savedUser = readJson(sessionKey, null);
 
-      if (isDemoProviderUser(savedUser)) {
+      if (savedUser && !isVerifiedGoogleUser(savedUser)) {
         removeItem(sessionKey);
         setUser(null);
       } else {
@@ -89,99 +86,53 @@ export function AuthProvider({ children }) {
     setAuthOpen(false);
   }, []);
 
-  const signUpWithEmail = useCallback(
-    ({ email, name, password }) => {
-      const cleanEmail = normalizeEmail(email);
-      const cleanName = normalizeText(name);
-      const cleanPassword = String(password || "");
-
-      if (!cleanName) {
+  const loginWithGoogleCredential = useCallback(
+    async (credential) => {
+      if (!credential) {
         return {
           ok: false,
-          message: "Nama wajib diisi.",
+          message: "Token Google tidak ditemukan. Silakan coba lagi.",
         };
       }
 
-      if (!cleanEmail) {
+      try {
+        const response = await fetch("/api/auth/google", {
+          body: JSON.stringify({ credential }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+        });
+
+        const payload = await response.json().catch(() => ({}));
+
+        if (!response.ok || !payload.user) {
+          return {
+            ok: false,
+            message:
+              payload.message ||
+              "Akun Google belum bisa diverifikasi. Silakan coba lagi.",
+          };
+        }
+
+        const nextUser = {
+          id: `google:${payload.user.googleId}`,
+          email: normalizeEmail(payload.user.email),
+          emailVerified: true,
+          image: payload.user.image || "",
+          name: payload.user.name || payload.user.email,
+          provider: "Google",
+        };
+
+        saveSession(nextUser);
+
+        return { ok: true };
+      } catch {
         return {
           ok: false,
-          message: "Email wajib diisi.",
+          message: "Verifikasi Google gagal terhubung. Silakan coba lagi.",
         };
       }
-
-      if (cleanPassword.length < 6) {
-        return {
-          ok: false,
-          message: "Password minimal 6 karakter.",
-        };
-      }
-
-      const users = readJson(usersKey, []);
-      const exists = users.some((item) => item.email === cleanEmail);
-
-      if (exists) {
-        return {
-          ok: false,
-          message: "Email sudah terdaftar. Silakan login.",
-        };
-      }
-
-      const nextUser = {
-        id: `email:${cleanEmail}`,
-        email: cleanEmail,
-        name: cleanName,
-        password: cleanPassword,
-        provider: "Email",
-      };
-
-      writeJson(usersKey, [...users, nextUser]);
-
-      saveSession({
-        id: nextUser.id,
-        email: nextUser.email,
-        name: nextUser.name,
-        provider: nextUser.provider,
-      });
-
-      return { ok: true };
-    },
-    [saveSession],
-  );
-
-  const loginWithEmail = useCallback(
-    ({ email, password }) => {
-      const cleanEmail = normalizeEmail(email);
-      const cleanPassword = String(password || "");
-
-      if (!cleanEmail || !cleanPassword) {
-        return {
-          ok: false,
-          message: "Email dan password wajib diisi.",
-        };
-      }
-
-      const users = readJson(usersKey, []);
-      const found = users.find(
-        (item) =>
-          item.email === cleanEmail && item.password === cleanPassword,
-      );
-
-      if (!found) {
-        return {
-          ok: false,
-          message:
-            "Email atau password belum sesuai. Jika belum punya akun, silakan sign up.",
-        };
-      }
-
-      saveSession({
-        id: found.id,
-        email: found.email,
-        name: found.name,
-        provider: found.provider,
-      });
-
-      return { ok: true };
     },
     [saveSession],
   );
@@ -195,19 +146,17 @@ export function AuthProvider({ children }) {
     () => ({
       authOpen,
       closeAuth: () => setAuthOpen(false),
-      loginWithEmail,
+      loginWithGoogleCredential,
       logout,
       openAuth: () => setAuthOpen(true),
       ready,
-      signUpWithEmail,
       user,
     }),
     [
       authOpen,
-      loginWithEmail,
+      loginWithGoogleCredential,
       logout,
       ready,
-      signUpWithEmail,
       user,
     ],
   );

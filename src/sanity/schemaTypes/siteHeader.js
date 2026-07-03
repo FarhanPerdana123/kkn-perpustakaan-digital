@@ -24,5 +24,14 @@ export const siteHeader = defineType({
         hotspot: true,
       },
     }),
+    defineField({
+      name: "favicon",
+      title: "Favicon",
+      description: "Ikon kecil yang tampil di tab browser. Gunakan gambar persegi.",
+      type: "image",
+      options: {
+        hotspot: true,
+      },
+    }),
   ],
 });

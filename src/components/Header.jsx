@@ -27,15 +27,19 @@ const defaultHeader = {
 };
 
 export function Header({ header = defaultHeader }) {
+  const logoFrameClass = header.logoUrl
+    ? "grid h-11 w-11 shrink-0 place-items-center bg-transparent"
+    : "grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-emerald-800 text-sm font-bold text-white shadow-sm";
+
   return (
     <header className="sticky top-0 z-30 border-b border-emerald-900/10 bg-stone-50/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-3">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-emerald-800 text-sm font-bold text-white shadow-sm">
+          <span className={logoFrameClass}>
             {header.logoUrl ? (
               <Image
                 alt={`Logo ${header.title}`}
-                className="h-full w-full rounded-lg object-cover"
+                className="h-full w-full object-contain"
                 height={44}
                 src={header.logoUrl}
                 width={44}
@@ -43,7 +47,7 @@ export function Header({ header = defaultHeader }) {
             ) : (
               header.logoText
             )}
-            </span>
+          </span>
           <span className="min-w-0">
             <span className="block text-sm font-semibold leading-5 text-slate-950 sm:text-base">
               {header.title}
