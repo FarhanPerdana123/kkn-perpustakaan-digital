@@ -9,7 +9,7 @@ export function AuthDialog() {
     closeAuth,
     loginAsGuest,
     loginWithEmail,
-    loginWithProvider,
+    loginWithGoogle,
     signUpWithEmail,
   } = useAuth();
 
@@ -19,6 +19,7 @@ export function AuthDialog() {
     name: "",
     password: "",
   });
+  const [loadingProvider, setLoadingProvider] = useState("");
   const [message, setMessage] = useState("");
 
   if (!authOpen) return null;
@@ -45,15 +46,24 @@ export function AuthDialog() {
     setMessage("");
   }
 
-  function submitProvider(provider) {
-    const result = loginWithProvider(provider);
+  async function submitGoogle() {
+    setLoadingProvider("google");
+    setMessage("");
+
+    const result = await loginWithGoogle();
 
     if (!result.ok) {
       setMessage(result.message || "Login gagal.");
+      setLoadingProvider("");
       return;
     }
 
+    setLoadingProvider("");
     setMessage("");
+  }
+
+  function submitUnavailableProvider(provider) {
+    setMessage(`${provider} login belum dikonfigurasi.`);
   }
 
   function submitGuest() {
@@ -98,15 +108,16 @@ export function AuthDialog() {
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <button
             className="rounded-lg border border-slate-200 px-4 py-3 text-sm font-bold text-slate-800 hover:bg-slate-50"
-            onClick={() => submitProvider("Google")}
+            disabled={loadingProvider === "google"}
+            onClick={submitGoogle}
             type="button"
           >
-            Google
+            {loadingProvider === "google" ? "Membuka Google..." : "Google"}
           </button>
 
           <button
             className="rounded-lg border border-slate-200 px-4 py-3 text-sm font-bold text-slate-800 hover:bg-slate-50"
-            onClick={() => submitProvider("Facebook")}
+            onClick={() => submitUnavailableProvider("Facebook")}
             type="button"
           >
             Facebook

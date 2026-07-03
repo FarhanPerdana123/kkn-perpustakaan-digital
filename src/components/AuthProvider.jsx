@@ -13,6 +13,11 @@ const AuthContext = createContext(null);
 
 const sessionKey = "podosoko_library_session";
 const usersKey = "podosoko_library_users";
+const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+const googleScriptSrc = "https://accounts.google.com/gsi/client";
+const googleUserInfoUrl = "https://www.googleapis.com/oauth2/v3/userinfo";
+
+let googleScriptPromise = null;
 
 function readJson(key, fallback) {
   if (typeof window === "undefined") return fallback;
@@ -45,24 +50,36 @@ function removeItem(key) {
   }
 }
 
+function loadScript(src) {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("Browser belum siap."));
+  }
+
+  if (document.querySelector(`script[src="${src}"]`)) {
+    return Promise.resolve();
+  }
+
+  if (!googleScriptPromise) {
+    googleScriptPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.async = true;
+      script.defer = true;
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error("Google login gagal dimuat."));
+      document.head.appendChild(script);
+    });
+  }
+
+  return googleScriptPromise;
+}
+
 function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
 
 function normalizeText(value) {
   return String(value || "").trim();
-}
-
-function createProviderUser(provider) {
-  const cleanProvider = normalizeText(provider);
-  const providerId = cleanProvider.toLowerCase();
-
-  return {
-    id: `${providerId}:demo-user`,
-    email: `${providerId}@akun-demo.local`,
-    name: `Pengguna ${cleanProvider}`,
-    provider: cleanProvider,
-  };
 }
 
 function createGuestUser() {
@@ -74,6 +91,28 @@ function createGuestUser() {
   };
 }
 
+function isDemoProviderUser(value) {
+  return (
+    value &&
+    typeof value.id === "string" &&
+    value.id.endsWith(":demo-user")
+  );
+}
+
+async function fetchGoogleUser(accessToken) {
+  const response = await fetch(googleUserInfoUrl, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Profil Google gagal dibaca.");
+  }
+
+  return response.json();
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
@@ -81,7 +120,15 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      setUser(readJson(sessionKey, null));
+      const savedUser = readJson(sessionKey, null);
+
+      if (isDemoProviderUser(savedUser)) {
+        removeItem(sessionKey);
+        setUser(null);
+      } else {
+        setUser(savedUser);
+      }
+
       setReady(true);
     }, 0);
 
@@ -191,15 +238,71 @@ export function AuthProvider({ children }) {
     [saveSession],
   );
 
-  const loginWithProvider = useCallback(
-    (provider) => {
-      const nextUser = createProviderUser(provider);
-      saveSession(nextUser);
+  const loginWithGoogle = useCallback(async () => {
+    if (!googleClientId) {
+      return {
+        ok: false,
+        message:
+          "Google login belum dikonfigurasi. Tambahkan NEXT_PUBLIC_GOOGLE_CLIENT_ID di Vercel Environment Variables.",
+      };
+    }
+
+    try {
+      await loadScript(googleScriptSrc);
+
+      if (!window.google?.accounts?.oauth2) {
+        return {
+          ok: false,
+          message: "Google login belum tersedia di browser ini.",
+        };
+      }
+
+      const tokenResponse = await new Promise((resolve, reject) => {
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: googleClientId,
+          callback: (response) => {
+            if (response?.access_token) {
+              resolve(response);
+              return;
+            }
+
+            reject(new Error("Login Google dibatalkan atau gagal."));
+          },
+          error_callback: () => {
+            reject(new Error("Login Google dibatalkan atau gagal."));
+          },
+          prompt: "select_account",
+          scope: "openid email profile",
+        });
+
+        tokenClient.requestAccessToken({ prompt: "select_account" });
+      });
+
+      const profile = await fetchGoogleUser(tokenResponse.access_token);
+
+      if (!profile?.email) {
+        return {
+          ok: false,
+          message: "Akun Google tidak mengirim email.",
+        };
+      }
+
+      saveSession({
+        id: `google:${profile.sub || profile.email}`,
+        email: normalizeEmail(profile.email),
+        name: normalizeText(profile.name) || normalizeEmail(profile.email),
+        picture: profile.picture || "",
+        provider: "Google",
+      });
 
       return { ok: true };
-    },
-    [saveSession],
-  );
+    } catch (error) {
+      return {
+        ok: false,
+        message: error.message || "Login Google gagal.",
+      };
+    }
+  }, [saveSession]);
 
   const loginAsGuest = useCallback(() => {
     const nextUser = createGuestUser();
@@ -219,7 +322,7 @@ export function AuthProvider({ children }) {
       closeAuth: () => setAuthOpen(false),
       loginAsGuest,
       loginWithEmail,
-      loginWithProvider,
+      loginWithGoogle,
       logout,
       openAuth: () => setAuthOpen(true),
       ready,
@@ -230,7 +333,7 @@ export function AuthProvider({ children }) {
       authOpen,
       loginAsGuest,
       loginWithEmail,
-      loginWithProvider,
+      loginWithGoogle,
       logout,
       ready,
       signUpWithEmail,
