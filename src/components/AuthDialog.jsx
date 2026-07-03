@@ -7,9 +7,7 @@ export function AuthDialog() {
   const {
     authOpen,
     closeAuth,
-    loginAsGuest,
     loginWithEmail,
-    loginWithGoogle,
     signUpWithEmail,
   } = useAuth();
 
@@ -19,7 +17,6 @@ export function AuthDialog() {
     name: "",
     password: "",
   });
-  const [loadingProvider, setLoadingProvider] = useState("");
   const [message, setMessage] = useState("");
 
   if (!authOpen) return null;
@@ -40,37 +37,6 @@ export function AuthDialog() {
 
     if (!result.ok) {
       setMessage(result.message);
-      return;
-    }
-
-    setMessage("");
-  }
-
-  async function submitGoogle() {
-    setLoadingProvider("google");
-    setMessage("");
-
-    const result = await loginWithGoogle();
-
-    if (!result.ok) {
-      setMessage(result.message || "Login gagal.");
-      setLoadingProvider("");
-      return;
-    }
-
-    setLoadingProvider("");
-    setMessage("");
-  }
-
-  function submitUnavailableProvider(provider) {
-    setMessage(`${provider} login belum dikonfigurasi.`);
-  }
-
-  function submitGuest() {
-    const result = loginAsGuest();
-
-    if (!result.ok) {
-      setMessage(result.message || "Gagal masuk sebagai tamu.");
       return;
     }
 
@@ -105,42 +71,7 @@ export function AuthDialog() {
           </button>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <button
-            className="rounded-lg border border-slate-200 px-4 py-3 text-sm font-bold text-slate-800 hover:bg-slate-50"
-            disabled={loadingProvider === "google"}
-            onClick={submitGoogle}
-            type="button"
-          >
-            {loadingProvider === "google" ? "Membuka Google..." : "Google"}
-          </button>
-
-          <button
-            className="rounded-lg border border-slate-200 px-4 py-3 text-sm font-bold text-slate-800 hover:bg-slate-50"
-            onClick={() => submitUnavailableProvider("Facebook")}
-            type="button"
-          >
-            Facebook
-          </button>
-        </div>
-
-        <button
-          className="mt-3 w-full rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-900 hover:bg-emerald-100"
-          onClick={submitGuest}
-          type="button"
-        >
-          Lanjut sebagai tamu
-        </button>
-
-        <div className="my-5 flex items-center gap-3">
-          <span className="h-px flex-1 bg-slate-200" />
-          <span className="text-xs font-bold uppercase tracking-wide text-slate-400">
-            atau
-          </span>
-          <span className="h-px flex-1 bg-slate-200" />
-        </div>
-
-        <form className="grid gap-3" onSubmit={submitEmail}>
+        <form className="mt-5 grid gap-3" onSubmit={submitEmail}>
           {mode === "signup" ? (
             <label className="grid gap-1 text-sm font-semibold text-slate-700">
               Nama

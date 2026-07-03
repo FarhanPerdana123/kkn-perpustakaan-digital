@@ -13,11 +13,6 @@ const AuthContext = createContext(null);
 
 const sessionKey = "podosoko_library_session";
 const usersKey = "podosoko_library_users";
-const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
-const googleScriptSrc = "https://accounts.google.com/gsi/client";
-const googleUserInfoUrl = "https://www.googleapis.com/oauth2/v3/userinfo";
-
-let googleScriptPromise = null;
 
 function readJson(key, fallback) {
   if (typeof window === "undefined") return fallback;
@@ -50,30 +45,6 @@ function removeItem(key) {
   }
 }
 
-function loadScript(src) {
-  if (typeof window === "undefined") {
-    return Promise.reject(new Error("Browser belum siap."));
-  }
-
-  if (document.querySelector(`script[src="${src}"]`)) {
-    return Promise.resolve();
-  }
-
-  if (!googleScriptPromise) {
-    googleScriptPromise = new Promise((resolve, reject) => {
-      const script = document.createElement("script");
-      script.async = true;
-      script.defer = true;
-      script.src = src;
-      script.onload = resolve;
-      script.onerror = () => reject(new Error("Google login gagal dimuat."));
-      document.head.appendChild(script);
-    });
-  }
-
-  return googleScriptPromise;
-}
-
 function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
@@ -82,35 +53,12 @@ function normalizeText(value) {
   return String(value || "").trim();
 }
 
-function createGuestUser() {
-  return {
-    id: "guest:local-reader",
-    email: "tamu@akun-demo.local",
-    name: "Pembaca Tamu",
-    provider: "Guest",
-  };
-}
-
 function isDemoProviderUser(value) {
   return (
     value &&
     typeof value.id === "string" &&
     value.id.endsWith(":demo-user")
   );
-}
-
-async function fetchGoogleUser(accessToken) {
-  const response = await fetch(googleUserInfoUrl, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error("Profil Google gagal dibaca.");
-  }
-
-  return response.json();
 }
 
 export function AuthProvider({ children }) {
@@ -238,79 +186,6 @@ export function AuthProvider({ children }) {
     [saveSession],
   );
 
-  const loginWithGoogle = useCallback(async () => {
-    if (!googleClientId) {
-      return {
-        ok: false,
-        message:
-          "Google login belum dikonfigurasi. Tambahkan NEXT_PUBLIC_GOOGLE_CLIENT_ID di Vercel Environment Variables.",
-      };
-    }
-
-    try {
-      await loadScript(googleScriptSrc);
-
-      if (!window.google?.accounts?.oauth2) {
-        return {
-          ok: false,
-          message: "Google login belum tersedia di browser ini.",
-        };
-      }
-
-      const tokenResponse = await new Promise((resolve, reject) => {
-        const tokenClient = window.google.accounts.oauth2.initTokenClient({
-          client_id: googleClientId,
-          callback: (response) => {
-            if (response?.access_token) {
-              resolve(response);
-              return;
-            }
-
-            reject(new Error("Login Google dibatalkan atau gagal."));
-          },
-          error_callback: () => {
-            reject(new Error("Login Google dibatalkan atau gagal."));
-          },
-          prompt: "select_account",
-          scope: "openid email profile",
-        });
-
-        tokenClient.requestAccessToken({ prompt: "select_account" });
-      });
-
-      const profile = await fetchGoogleUser(tokenResponse.access_token);
-
-      if (!profile?.email) {
-        return {
-          ok: false,
-          message: "Akun Google tidak mengirim email.",
-        };
-      }
-
-      saveSession({
-        id: `google:${profile.sub || profile.email}`,
-        email: normalizeEmail(profile.email),
-        name: normalizeText(profile.name) || normalizeEmail(profile.email),
-        picture: profile.picture || "",
-        provider: "Google",
-      });
-
-      return { ok: true };
-    } catch (error) {
-      return {
-        ok: false,
-        message: error.message || "Login Google gagal.",
-      };
-    }
-  }, [saveSession]);
-
-  const loginAsGuest = useCallback(() => {
-    const nextUser = createGuestUser();
-    saveSession(nextUser);
-
-    return { ok: true };
-  }, [saveSession]);
-
   const logout = useCallback(() => {
     setUser(null);
     removeItem(sessionKey);
@@ -320,9 +195,7 @@ export function AuthProvider({ children }) {
     () => ({
       authOpen,
       closeAuth: () => setAuthOpen(false),
-      loginAsGuest,
       loginWithEmail,
-      loginWithGoogle,
       logout,
       openAuth: () => setAuthOpen(true),
       ready,
@@ -331,9 +204,7 @@ export function AuthProvider({ children }) {
     }),
     [
       authOpen,
-      loginAsGuest,
       loginWithEmail,
-      loginWithGoogle,
       logout,
       ready,
       signUpWithEmail,
