@@ -20,19 +20,19 @@ export function MediaCategories({ categories }) {
 
   return (
     <section
-      className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8"
+      className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8"
       id="kategori"
     >
       <div className="max-w-2xl">
         <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-700">
           Kategori Buku
         </p>
-        <h2 className="mt-3 text-3xl font-bold text-slate-950">
+        <h2 className="mt-3 text-3xl font-bold text-slate-950 sm:text-4xl">
           Temukan bacaan berdasarkan kebutuhan.
         </h2>
       </div>
 
-      <div className="relative mt-8">
+      <div className="relative mt-6 sm:mt-8">
         <button
           aria-label="Kategori sebelumnya"
           className="absolute left-0 top-1/2 z-10 hidden h-12 w-10 -translate-x-1/2 -translate-y-1/2 rounded-r-md border border-slate-200 bg-white text-2xl font-bold text-slate-600 shadow-sm hover:bg-emerald-50 hover:text-emerald-800 disabled:cursor-not-allowed disabled:opacity-40 md:block"
@@ -43,20 +43,20 @@ export function MediaCategories({ categories }) {
           &lsaquo;
         </button>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {visibleCategories.map((category) => (
             <Link
-              className="group min-h-64 rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md"
+              className="group rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md sm:min-h-64 sm:p-6"
               href={`/kategori/${category.id}`}
               key={category.id}
             >
-              <span className="grid h-14 w-14 place-items-center rounded-lg bg-emerald-50 text-emerald-800 group-hover:bg-emerald-800 group-hover:text-white">
-                <Icon name="BookOpen" className="h-7 w-7" />
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-emerald-50 text-emerald-800 group-hover:bg-emerald-800 group-hover:text-white sm:h-14 sm:w-14">
+                <Icon name="BookOpen" className="h-5 w-5 sm:h-7 sm:w-7" />
               </span>
-              <h3 className="mt-5 text-lg font-bold text-slate-950">
+              <h3 className="mt-3 text-sm font-bold leading-snug text-slate-950 sm:mt-5 sm:text-lg">
                 {category.name}
               </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
+              <p className="mt-2 hidden text-sm leading-6 text-slate-600 sm:line-clamp-3 sm:block">
                 {category.description}
               </p>
             </Link>
@@ -75,7 +75,7 @@ export function MediaCategories({ categories }) {
       </div>
 
       {totalPages > 1 ? (
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2 sm:mt-8">
           <button
             aria-label="Halaman kategori sebelumnya"
             className="grid h-10 w-10 place-items-center rounded-md border border-slate-200 bg-white text-lg font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"

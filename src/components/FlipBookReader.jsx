@@ -108,6 +108,85 @@ const BookPage = forwardRef(function BookPage(
   );
 });
 
+function ScrollPage({
+  pageNumber,
+  imageUrl,
+  title,
+  zoom,
+  onNeedRender,
+  onVisible,
+}) {
+  const pageRef = useRef(null);
+
+  useEffect(() => {
+    const element = pageRef.current;
+
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+
+        if (entry.isIntersecting) {
+          onNeedRender(pageNumber);
+
+          if (entry.intersectionRatio >= 0.35) {
+            onVisible(pageNumber);
+          }
+        }
+      },
+      {
+        root: null,
+        rootMargin: "700px 0px",
+        threshold: [0.15, 0.35, 0.6],
+      },
+    );
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [onNeedRender, onVisible, pageNumber]);
+
+  return (
+    <div
+      ref={pageRef}
+      className="mx-auto mb-6 flex w-full max-w-4xl flex-col items-center"
+      data-page-number={pageNumber}
+    >
+      <div
+        className="w-full overflow-hidden rounded-lg bg-[#fffdf7] shadow-[0_18px_45px_rgba(0,0,0,0.25)]"
+        style={{
+          transform: `scale(${zoom})`,
+          transformOrigin: "top center",
+        }}
+      >
+        <div className="flex min-h-[420px] items-center justify-center bg-[#fffdf7] p-3">
+          {imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              alt={`${title} halaman ${pageNumber}`}
+              className="h-auto w-full select-none object-contain"
+              draggable={false}
+              src={imageUrl}
+            />
+          ) : (
+            <div className="flex min-h-[420px] w-full flex-col items-center justify-center gap-3 text-center text-sm font-semibold text-slate-500">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-emerald-500" />
+              <span>Memuat halaman {pageNumber}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-slate-200 bg-[#fffdf7] px-4 py-2 text-center text-xs font-semibold text-slate-500">
+          Halaman {pageNumber}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function FlipBookReader({ pdfUrl, title }) {
   const readerRef = useRef(null);
   const bookRef = useRef(null);
@@ -124,6 +203,19 @@ export function FlipBookReader({ pdfUrl, title }) {
   const [loading, setLoading] = useState(Boolean(pdfUrl));
   const [error, setError] = useState("");
   const [zoom, setZoom] = useState(1);
+  const [viewMode, setViewMode] = useState(() =>
+    typeof window !== "undefined" && window.innerWidth < 768
+      ? "scroll"
+      : "flip",
+  );
+
+  useEffect(() => {
+    if (isMobile) {
+      queueMicrotask(() => {
+        setViewMode("scroll");
+      });
+    }
+  }, [isMobile]);
 
   const canRead = totalPages > 0 && !loading && !error;
   const atStart = currentPage <= 1;
@@ -426,7 +518,37 @@ export function FlipBookReader({ pdfUrl, title }) {
     return Math.max(currentPage - (isMobile ? 1 : 2), 1);
   }
 
+  function scrollToPage(pageNumber) {
+    const target = document.querySelector(`[data-page-number="${pageNumber}"]`);
+
+    if (target) {
+      target.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }
+
+  const handleScrollPageRender = useCallback(
+    (pageNumber) => {
+      const token = renderTokenRef.current;
+      renderPage(pageNumber, token);
+    },
+    [renderPage],
+  );
+
+  const handleScrollPageVisible = useCallback((pageNumber) => {
+    setCurrentPage(pageNumber);
+  }, []);
+
   function goPrev() {
+    if (viewMode === "scroll") {
+      const targetPage = Math.max(currentPage - 1, 1);
+      handleScrollPageRender(targetPage);
+      scrollToPage(targetPage);
+      return;
+    }
+
     const targetPage = getPrevTargetPage();
 
     if (!isPageReady(targetPage)) {
@@ -439,6 +561,13 @@ export function FlipBookReader({ pdfUrl, title }) {
   }
 
   function goNext() {
+    if (viewMode === "scroll") {
+      const targetPage = Math.min(currentPage + 1, totalPages);
+      handleScrollPageRender(targetPage);
+      scrollToPage(targetPage);
+      return;
+    }
+
     const targetPage = getNextTargetPage();
 
     if (!isPageReady(targetPage)) {
@@ -484,6 +613,33 @@ export function FlipBookReader({ pdfUrl, title }) {
             Reader Buku Digital
           </p>
           <h2 className="mt-2 text-2xl font-bold text-white">{title}</h2>
+          <div className="mt-5 flex justify-center">
+            <div className="inline-flex rounded-xl border border-slate-700 bg-slate-900 p-1">
+              <button
+                className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
+                  viewMode === "flip"
+                    ? "bg-emerald-500 text-slate-950"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                }`}
+                onClick={() => setViewMode("flip")}
+                type="button"
+              >
+                Flipbook
+              </button>
+
+              <button
+                className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
+                  viewMode === "scroll"
+                    ? "bg-emerald-500 text-slate-950"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                }`}
+                onClick={() => setViewMode("scroll")}
+                type="button"
+              >
+                Scroll PDF
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="relative mx-auto flex min-h-[560px] items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-[radial-gradient(circle_at_center,#334155_0%,#0f172a_70%)] p-4 shadow-inner [scrollbar-width:none] sm:min-h-[720px]">
@@ -524,82 +680,106 @@ export function FlipBookReader({ pdfUrl, title }) {
             </div>
           ) : (
             <>
-              <button
-                aria-label="Halaman sebelumnya"
-                className="absolute left-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-slate-950/80 text-white shadow-lg hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40 md:grid"
-                disabled={atStart}
-                onClick={goPrev}
-                type="button"
-              >
-                <ChevronLeft className="h-7 w-7" />
-              </button>
-
-              <div
-                className="relative flex max-w-full items-center justify-center overflow-hidden"
-                style={{ perspective: "1800px" }}
-              >
-                {!isMobile && !isFrontCoverView ? (
-                  <div className="pointer-events-none absolute left-1/2 top-4 z-30 h-[calc(100%-2rem)] w-[2px] -translate-x-1/2 bg-gradient-to-b from-transparent via-black/30 to-transparent" />
-                ) : null}
-
-                <div
-                  className="transition-transform duration-200 ease-out"
-                  style={spreadStyle}
-                >
-                  <HTMLFlipBook
-                    ref={bookRef}
-                    width={width}
-                    height={height}
-                    size="fixed"
-                    minWidth={280}
-                    maxWidth={520}
-                    minHeight={390}
-                    maxHeight={740}
-                    autoSize={false}
-                    className={`mx-auto overflow-hidden rounded-sm shadow-[0_18px_45px_rgba(0,0,0,0.28)] ${
-                      isFrontCoverView ? "bg-transparent" : "bg-[#fffdf7]"
-                    }`}
-                    drawShadow
-                    flippingTime={1350}
-                    maxShadowOpacity={0.22}
-                    mobileScrollSupport={false}
-                    showCover={!isMobile}
-                    showPageCorners
-                    useMouseEvents
-                    clickEventForward
-                    usePortrait={isMobile}
-                    startPage={0}
-                    startZIndex={30}
-                    onFlip={(event) => {
-                      setCurrentPage(event.data + 1);
-                    }}
+              {viewMode === "flip" ? (
+                <>
+                  <button
+                    aria-label="Halaman sebelumnya"
+                    className="absolute left-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-slate-950/80 text-white shadow-lg hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40 md:grid"
+                    disabled={atStart}
+                    onClick={goPrev}
+                    type="button"
                   >
-                    {Array.from({ length: totalPages }, (_, index) => {
-                      const pageNumber = index + 1;
+                    <ChevronLeft className="h-7 w-7" />
+                  </button>
 
-                      return (
-                        <BookPage
-                          key={pageNumber}
-                          pageNumber={pageNumber}
-                          imageUrl={pageImages[pageNumber]}
-                          title={title}
-                          isCover={pageNumber === 1}
-                        />
-                      );
-                    })}
-                  </HTMLFlipBook>
+                  <div
+                    className="relative flex max-w-full items-center justify-center overflow-hidden"
+                    style={{ perspective: "1800px" }}
+                  >
+                    {!isMobile && !isFrontCoverView ? (
+                      <div className="pointer-events-none absolute left-1/2 top-4 z-30 h-[calc(100%-2rem)] w-[2px] -translate-x-1/2 bg-gradient-to-b from-transparent via-black/30 to-transparent" />
+                    ) : null}
+
+                    <div
+                      className="transition-transform duration-200 ease-out"
+                      style={spreadStyle}
+                    >
+                      <HTMLFlipBook
+                        ref={bookRef}
+                        width={width}
+                        height={height}
+                        size="fixed"
+                        minWidth={280}
+                        maxWidth={520}
+                        minHeight={390}
+                        maxHeight={740}
+                        autoSize={false}
+                        className={`mx-auto overflow-hidden rounded-sm shadow-[0_18px_45px_rgba(0,0,0,0.28)] ${
+                          isFrontCoverView
+                            ? "bg-transparent"
+                            : "bg-[#fffdf7]"
+                        }`}
+                        drawShadow
+                        flippingTime={1350}
+                        maxShadowOpacity={0.22}
+                        mobileScrollSupport={false}
+                        showCover={!isMobile}
+                        showPageCorners
+                        useMouseEvents
+                        clickEventForward
+                        usePortrait={isMobile}
+                        startPage={0}
+                        startZIndex={30}
+                        onFlip={(event) => {
+                          setCurrentPage(event.data + 1);
+                        }}
+                      >
+                        {Array.from({ length: totalPages }, (_, index) => {
+                          const pageNumber = index + 1;
+
+                          return (
+                            <BookPage
+                              key={pageNumber}
+                              pageNumber={pageNumber}
+                              imageUrl={pageImages[pageNumber]}
+                              title={title}
+                              isCover={pageNumber === 1}
+                            />
+                          );
+                        })}
+                      </HTMLFlipBook>
+                    </div>
+                  </div>
+
+                  <button
+                    aria-label="Halaman berikutnya"
+                    className="absolute right-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-slate-950/80 text-white shadow-lg hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40 md:grid"
+                    disabled={atEnd}
+                    onClick={goNext}
+                    type="button"
+                  >
+                    <ChevronRight className="h-7 w-7" />
+                  </button>
+                </>
+              ) : (
+                <div className="h-[72vh] w-full overflow-y-auto overflow-x-hidden rounded-xl bg-slate-950/50 px-3 py-6 [scrollbar-width:thin] md:px-6">
+                  {Array.from({ length: totalPages }, (_, index) => {
+                    const pageNumber = index + 1;
+
+                    return (
+                      <ScrollPage
+                        key={pageNumber}
+                        pageNumber={pageNumber}
+                        imageUrl={pageImages[pageNumber]}
+                        title={title}
+                        zoom={zoom}
+                        onNeedRender={handleScrollPageRender}
+                        onVisible={handleScrollPageVisible}
+                      />
+                    );
+                  })}
                 </div>
-              </div>
-
-              <button
-                aria-label="Halaman berikutnya"
-                className="absolute right-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-slate-950/80 text-white shadow-lg hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40 md:grid"
-                disabled={atEnd}
-                onClick={goNext}
-                type="button"
-              >
-                <ChevronRight className="h-7 w-7" />
-              </button>
+              )}
             </>
           )}
         </div>

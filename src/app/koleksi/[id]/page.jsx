@@ -1,5 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import { BookmarkButton } from "@/components/BookmarkButton";
+import { BookSummary } from "@/components/BookSummary";
 import { FlipBookReader } from "@/components/FlipBookReader";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
@@ -62,20 +64,20 @@ export default async function BookReaderPage({ params }) {
       <Header header={header} />
       <main>
         <section className="border-b border-slate-200 bg-white py-14">
-          <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[220px_1fr] lg:px-8">
-            <div className="overflow-hidden rounded-lg border border-slate-200 bg-gradient-to-br from-emerald-100 to-lime-50 shadow-sm">
+          <div className="mx-auto grid max-w-7xl items-start gap-8 px-4 sm:px-6 lg:grid-cols-[220px_1fr] lg:px-8">
+            <div className="mx-auto w-full max-w-[220px] self-start overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm lg:mx-0">
               {book.coverUrl ? (
-                <div className="relative aspect-[3/4]">
+                <div className="relative aspect-[2/3] w-full overflow-hidden bg-slate-100">
                   <Image
                     alt={`Sampul ${book.title}`}
-                    className="object-cover"
+                    className="object-cover object-top"
                     fill
-                    sizes="220px"
+                    sizes="(min-width: 1024px) 220px, 70vw"
                     src={book.coverUrl}
                   />
                 </div>
               ) : (
-                <div className="grid aspect-[3/4] place-items-center px-6 text-center text-sm font-bold text-emerald-900">
+                <div className="grid aspect-[2/3] place-items-center px-6 text-center text-sm font-bold text-emerald-900">
                   Sampul buku belum tersedia
                 </div>
               )}
@@ -94,31 +96,15 @@ export default async function BookReaderPage({ params }) {
               <h1 className="mt-3 text-4xl font-bold text-slate-950">
                 {book.title}
               </h1>
-              <div className="mt-4 flex flex-wrap gap-2 text-sm font-semibold text-slate-600">
-                {book.categories?.map((category) => (
-                  <span
-                    className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-800"
-                    key={category.id || category.name}
-                  >
-                    {category.name}
-                  </span>
-                ))}
-                {book.year ? (
-                  <span className="rounded-full bg-slate-100 px-3 py-1">
-                    {book.year}
-                  </span>
-                ) : null}
-                {book.author ? (
-                  <span className="rounded-full bg-slate-100 px-3 py-1">
-                    {book.author}
-                  </span>
-                ) : null}
+              <div className="mt-4">
+                <BookmarkButton book={book} />
               </div>
-              {book.description ? (
-                <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">
-                  {book.description}
-                </p>
-              ) : null}
+              <BookSummary
+                author={book.author}
+                categories={book.categories}
+                description={book.description}
+                year={book.year}
+              />
             </div>
           </div>
         </section>

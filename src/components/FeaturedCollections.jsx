@@ -13,14 +13,14 @@ export function FeaturedCollections({
   showAction = true,
 }) {
   return (
-    <section className="bg-white py-16" id="koleksi">
+    <section className="bg-white py-10 sm:py-16" id="koleksi">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-700">
               {eyebrow}
             </p>
-            <h2 className="mt-3 text-3xl font-bold text-slate-950">
+            <h2 className="mt-3 text-3xl font-bold text-slate-950 sm:text-4xl">
               {title}
             </h2>
           </div>
@@ -35,66 +35,64 @@ export function FeaturedCollections({
         </div>
 
         {books.length > 0 ? (
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
             {books.map((item) => (
-            <article
-              className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
-              key={item.id}
-            >
-              <div className="flex aspect-[2/3] w-full max-w-[400px] items-center justify-center self-center overflow-hidden bg-gradient-to-br from-emerald-100 to-lime-50">
-                {item.coverUrl ? (
-                  <div className="relative h-full w-full">
+              <article
+                className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+                key={item.id}
+              >
+                <div className="relative aspect-[2/3] w-full overflow-hidden bg-slate-100">
+                  {item.coverUrl ? (
                     <Image
-                    alt={`Sampul ${item.title}`}
-                    className="h-full w-full object-cover"
-                    fill
-                    sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
-                    src={item.coverUrl}
-                  />
-                  </div>
-                ) : (
-                  <div className="grid h-20 w-20 place-items-center rounded-lg bg-white/80 text-emerald-900 shadow-sm">
-                    <Icon name="BookOpen" className="h-10 w-10" />
-                  </div>
-                )}
-              </div>
-              <div className="p-5">
-                <div className="flex flex-wrap gap-2">
-                  {item.categories?.length ? (
-                    item.categories.map((category) => (
-                      <span
-                        className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-800"
-                        key={category.id || category.name}
-                      >
-                        {category.name}
-                      </span>
-                    ))
+                      alt={`Sampul ${item.title}`}
+                      className="object-cover object-top"
+                      fill
+                      sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 50vw"
+                      src={item.coverUrl}
+                    />
                   ) : (
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-800">
-                      Buku
+                    <div className="grid h-full w-full place-items-center bg-emerald-50 text-emerald-900">
+                      <Icon name="BookOpen" className="h-10 w-10 sm:h-12 sm:w-12" />
+                    </div>
+                  )}
+                </div>
+                <div className="p-3 sm:p-5">
+                  <div className="flex max-h-14 flex-wrap gap-1 overflow-hidden sm:max-h-none sm:gap-2">
+                    {item.categories?.length ? (
+                      item.categories.map((category) => (
+                        <span
+                          className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase leading-none tracking-wide text-emerald-800 sm:px-3 sm:text-xs"
+                          key={category.id || category.name}
+                        >
+                          {category.name}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase leading-none tracking-wide text-emerald-800 sm:px-3 sm:text-xs">
+                        Buku
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="mt-3 line-clamp-2 text-sm font-bold leading-snug text-slate-950 sm:mt-4 sm:text-lg sm:leading-6">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2 hidden min-h-12 text-sm leading-6 text-slate-600 sm:line-clamp-2 sm:block">
+                    {item.description}
+                  </p>
+                  {item.pdfUrl ? (
+                    <Link
+                      className="mt-4 inline-flex rounded-lg bg-slate-950 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-900 sm:mt-5 sm:px-4 sm:text-sm"
+                      href={`/koleksi/${item.readerId || item.slug || item.id}`}
+                    >
+                      Baca Buku
+                    </Link>
+                  ) : (
+                    <span className="mt-4 inline-flex cursor-not-allowed rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-500 sm:mt-5 sm:px-4 sm:text-sm">
+                      File belum tersedia
                     </span>
                   )}
                 </div>
-                <h3 className="mt-4 text-lg font-bold leading-6 text-slate-950">
-                  {item.title}
-                </h3>
-                <p className="mt-2 min-h-12 text-sm leading-6 text-slate-600">
-                  {item.description}
-                </p>
-                {item.pdfUrl ? (
-                  <Link
-                    className="mt-5 inline-flex rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-900"
-                    href={`/koleksi/${item.readerId || item.slug || item.id}`}
-                  >
-                    Baca Buku
-                  </Link>
-                ) : (
-                  <span className="mt-5 inline-flex cursor-not-allowed rounded-lg bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-500">
-                    File belum tersedia
-                  </span>
-                )}
-              </div>
-            </article>
+              </article>
             ))}
           </div>
         ) : (

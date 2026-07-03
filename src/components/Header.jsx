@@ -1,14 +1,16 @@
 import Link from "next/link";
 import Image from "next/image";
+import { AuthMenu } from "./AuthMenu";
 import { Icon } from "./icons";
 
-const navItems = ["Beranda", "Koleksi Buku", "Kategori"];
+const navItems = ["Beranda", "Koleksi Buku", "Kategori", "Bookmark"];
 
 function getHref(item) {
   const links = {
     Beranda: "/",
     "Koleksi Buku": "/koleksi",
     Kategori: "/#kategori",
+    Bookmark: "/bookmark",
     "Tentang Kami": "/#tentang-kami",
   };
 
@@ -65,10 +67,7 @@ export function Header({ header = defaultHeader }) {
         </nav>
 
         <div className="hidden items-center lg:flex">
-          <button className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
-            {header.languageLabel}
-            <Icon name="ChevronDown" className="h-4 w-4" />
-          </button>
+          <AuthMenu />
         </div>
 
         <details className="relative lg:hidden">
@@ -89,10 +88,7 @@ export function Header({ header = defaultHeader }) {
               ))}
             </nav>
             <div className="mt-3 border-t border-slate-100 pt-3">
-              <button className="inline-flex w-full items-center justify-center gap-1 rounded-lg bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
-                {header.mobileLanguageLabel}
-                <Icon name="ChevronDown" className="h-4 w-4" />
-              </button>
+              <AuthMenu compact />
             </div>
           </div>
         </details>

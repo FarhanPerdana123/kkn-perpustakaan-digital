@@ -28,7 +28,7 @@ export default async function Home() {
       <main>
         <HeroSearch hero={hero} />
         <MediaCategories categories={categories} />
-        <FeaturedCollections books={books} />
+        <FeaturedCollections books={books.slice(0, 6)} />
       </main>
       <Footer footer={footer} />
     </div>
