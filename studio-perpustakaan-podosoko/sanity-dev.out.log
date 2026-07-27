@@ -1,0 +1,15 @@
+
+> studio-perpustakaan-podosoko@1.0.0 dev
+> sanity dev --host 127.0.0.1 --port 3334
+
+Sanity Studio using vite@7.3.6 ready in 2319ms and running at http://127.0.0.1:3334/
+[2m13.30.02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.sanity/runtime/app.js[22m
+[2m13.30.03[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.sanity/runtime/index.html[22m
+[2m13.30.03[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mschemaTypes/book.ts[22m
+[2m13.30.03[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mschemaTypes/category.ts[22m
+[2m13.30.03[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mschemaTypes/index.ts[22m
+[2m13.30.03[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mschemaTypes/siteFooter.ts[22m
+[2m13.30.03[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mschemaTypes/siteHeader.ts[22m
+[2m13.30.03[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mschemaTypes/siteHero.ts[22m
+[2m13.30.03[22m [36m[1m[vite][22m[39m changed tsconfig file detected: C:/xampp/htdocs/kkn-perpustakaan-digital/studio-perpustakaan-podosoko/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[2m13.30.03[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msanity.config.ts[22m
