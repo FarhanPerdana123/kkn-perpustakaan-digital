@@ -4,7 +4,7 @@ import { isSanityConfigured } from "@/sanity/env";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Sanity Studio | Perpustakaan Digital Desa",
+  title: "Sanity Studio | Perpustakaan Podosoko",
   robots: {
     index: false,
     follow: false,

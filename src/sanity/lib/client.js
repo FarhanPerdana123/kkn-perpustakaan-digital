@@ -3,7 +3,7 @@ import { apiVersion, dataset, projectId } from "../env";
 
 export const sanityClient = createClient({
   apiVersion,
-  dataset: dataset || "production",
-  projectId: projectId || "00000000",
+  dataset,
+  projectId,
   useCdn: false,
 });

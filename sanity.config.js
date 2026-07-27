@@ -4,10 +4,10 @@ import { apiVersion, dataset, projectId } from "./src/sanity/env";
 import { schemaTypes } from "./src/sanity/schemaTypes";
 
 export default defineConfig({
-  name: "perpustakaan_digital_desa",
-  title: "Perpustakaan Digital Desa",
-  projectId: projectId || "00000000",
-  dataset: dataset || "production",
+  name: "perpustakaan_podosoko",
+  title: "Perpustakaan Podosoko",
+  projectId,
+  dataset,
   basePath: "/studio",
   plugins: [structureTool()],
   schema: {
