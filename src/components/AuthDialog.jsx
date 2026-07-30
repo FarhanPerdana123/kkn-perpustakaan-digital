@@ -73,13 +73,14 @@ export function AuthDialog() {
         });
 
         googleButtonRef.current.innerHTML = "";
+        const btnWidth = googleButtonRef.current.clientWidth;
         window.google.accounts.id.renderButton(googleButtonRef.current, {
           logo_alignment: "left",
           shape: "rectangular",
           size: "large",
           text: "continue_with",
           theme: "outline",
-          width: 352,
+          width: btnWidth > 0 ? btnWidth : undefined,
         });
       })
       .catch(() => {
@@ -96,21 +97,21 @@ export function AuthDialog() {
   if (!authOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 px-4 py-6 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-5 shadow-2xl">
+    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 px-4 py-6 backdrop-blur-sm overflow-y-auto">
+      <div className="w-full max-w-md overflow-hidden rounded-lg border border-slate-200 bg-white p-5 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-700">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-700 truncate">
               Akun Pembaca
             </p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-950">
+            <h2 className="mt-2 text-xl sm:text-2xl font-bold text-slate-950 break-words">
               Login dengan Google
             </h2>
           </div>
 
           <button
             aria-label="Tutup login"
-            className="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 text-lg font-bold text-slate-600 hover:bg-slate-50"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-slate-200 text-lg font-bold text-slate-600 hover:bg-slate-50"
             onClick={closeAuth}
             type="button"
           >
