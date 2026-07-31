@@ -76,7 +76,7 @@ export function FeaturedCollections({
                   <h3 className="mt-3 line-clamp-2 text-sm font-bold leading-snug text-slate-950 sm:mt-4 sm:text-lg sm:leading-6">
                     {item.title}
                   </h3>
-                  <p className="mt-2 hidden min-h-12 text-sm leading-6 text-slate-600 sm:line-clamp-2 sm:block">
+                  <p className="mt-2 hidden min-h-12 text-sm leading-6 text-slate-600 sm:line-clamp-3">
                     {item.description}
                   </p>
                   {item.pdfUrl ? (
