@@ -13,8 +13,8 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ReaderToolbar } from "./ReaderToolbar";
 
-const pdfJsUrl = "/pdfjs/pdf.mjs";
-const pdfWorkerUrl = "/pdfjs/pdf.worker.min.mjs";
+const pdfJsUrl = "/pdfjs-dist/build/pdf.mjs";
+const pdfWorkerUrl = "/pdfjs-dist/build/pdf.worker.min.mjs";
 
 function useReaderSize(isFullscreen = false) {
   const [reader, setReader] = useState({
@@ -451,6 +451,9 @@ export function FlipBookReader({ pdfUrl, title }) {
           disableRange: false,
           disableAutoFetch: false,
           rangeChunkSize: 65536,
+          cMapUrl: "/pdfjs-dist/cmaps/",
+          cMapPacked: true,
+          standardFontDataUrl: "/pdfjs-dist/standard_fonts/",
         });
 
         const pdf = await loadingTask.promise;
