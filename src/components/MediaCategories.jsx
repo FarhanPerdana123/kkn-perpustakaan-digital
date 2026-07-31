@@ -56,7 +56,7 @@ export function MediaCategories({ categories }) {
               <h3 className="mt-3 text-sm font-bold leading-snug text-slate-950 sm:mt-5 sm:text-lg">
                 {category.name}
               </h3>
-              <p className="mt-2 hidden text-sm leading-6 text-slate-600 sm:line-clamp-3 sm:block">
+              <p className="mt-2 hidden text-sm leading-6 text-slate-600 sm:line-clamp-3">
                 {category.description}
               </p>
             </Link>
