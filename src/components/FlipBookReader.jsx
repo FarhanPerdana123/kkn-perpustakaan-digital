@@ -454,6 +454,7 @@ export function FlipBookReader({ pdfUrl, title }) {
           cMapUrl: "/pdfjs-dist/cmaps/",
           cMapPacked: true,
           standardFontDataUrl: "/pdfjs-dist/standard_fonts/",
+          wasmUrl: "/pdfjs-dist/wasm/",
         });
 
         const pdf = await loadingTask.promise;
