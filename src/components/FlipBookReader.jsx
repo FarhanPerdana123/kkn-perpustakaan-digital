@@ -746,6 +746,7 @@ export function FlipBookReader({ pdfUrl, title }) {
                       style={spreadStyle}
                     >
                       <HTMLFlipBook
+                        key={`flipbook-${isFullscreen ? "full" : "normal"}`}
                         ref={bookRef}
                         width={width}
                         height={height}
@@ -769,7 +770,7 @@ export function FlipBookReader({ pdfUrl, title }) {
                         useMouseEvents
                         clickEventForward
                         usePortrait={isMobile}
-                        startPage={0}
+                        startPage={currentPage > 1 ? currentPage - 1 : 0}
                         startZIndex={30}
                         onFlip={(event) => {
                           setCurrentPage(event.data + 1);
