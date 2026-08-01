@@ -633,6 +633,29 @@ export function FlipBookReader({ pdfUrl, title }) {
     }),
     [zoom],
   );
+  const goPrevRef = useRef(goPrev);
+  const goNextRef = useRef(goNext);
+
+  useEffect(() => {
+    goPrevRef.current = goPrev;
+    goNextRef.current = goNext;
+  });
+
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (!isFullscreen || isMobile) return;
+
+      if (e.key === "ArrowLeft") {
+        goPrevRef.current();
+      } else if (e.key === "ArrowRight") {
+        goNextRef.current();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isFullscreen, isMobile]);
+
   const isFrontCoverView = !isMobile && currentPage === 1;
 
   return (
@@ -645,7 +668,7 @@ export function FlipBookReader({ pdfUrl, title }) {
       <div className={isFullscreen ? "h-full w-full" : "mx-auto max-w-7xl"}>
         <div className={isFullscreen ? "hidden" : "mb-6 text-center"}>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">
-            Reader Buku Digital
+            Ruang Baca Digital
           </p>
           <h2 className="mt-2 text-2xl font-bold text-white">{title}</h2>
           <div className="mt-5 flex justify-center">

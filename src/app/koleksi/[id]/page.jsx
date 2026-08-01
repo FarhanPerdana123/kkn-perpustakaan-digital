@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { BookSummary } from "@/components/BookSummary";
+import { Download } from "lucide-react";
 import { FlipBookReader } from "@/components/FlipBookReader";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
@@ -39,7 +40,7 @@ export default async function BookReaderPage({ params }) {
         <Header header={header} />
         <main className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 lg:px-8">
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-700">
-            Reader Buku
+            Peringatan
           </p>
           <h1 className="mt-3 text-4xl font-bold text-slate-950">
             Buku tidak ditemukan
@@ -91,13 +92,25 @@ export default async function BookReaderPage({ params }) {
                 Kembali ke koleksi
               </Link>
               <p className="mt-6 text-sm font-bold uppercase tracking-[0.18em] text-emerald-700">
-                Reader Buku
+                Detail Koleksi
               </p>
               <h1 className="mt-3 text-4xl font-bold text-slate-950">
                 {book.title}
               </h1>
-              <div className="mt-4">
+              <div className="mt-4 flex flex-wrap gap-3">
                 <BookmarkButton book={book} />
+                {book.pdfUrl && (
+                  <a
+                    href={book.pdfUrl}
+                    download={`${book.title}.pdf`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex w-fit items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-800 transition hover:bg-emerald-50 hover:text-emerald-900"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download PDF
+                  </a>
+                )}
               </div>
               <BookSummary
                 author={book.author}
