@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Maximize2,
+  Minimize2,
   RotateCcw,
   ZoomIn,
   ZoomOut,
@@ -12,6 +13,7 @@ import {
 
 export function ReaderToolbar({
   currentPage,
+  isFullscreen,
   onBack,
   onFullscreen,
   onNext,
@@ -82,12 +84,16 @@ export function ReaderToolbar({
         <RotateCcw className="h-5 w-5" />
       </button>
       <button
-        aria-label="Fullscreen"
+        aria-label={isFullscreen ? "Keluar Fullscreen" : "Fullscreen"}
         className="grid h-10 w-10 place-items-center rounded-md border border-white/10 text-slate-100 hover:bg-white/10"
         onClick={onFullscreen}
         type="button"
       >
-        <Maximize2 className="h-5 w-5" />
+        {isFullscreen ? (
+          <Minimize2 className="h-5 w-5" />
+        ) : (
+          <Maximize2 className="h-5 w-5" />
+        )}
       </button>
     </div>
   );

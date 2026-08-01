@@ -831,15 +831,22 @@ export function FlipBookReader({ pdfUrl, title }) {
           )}
         </div>
 
-        <div className={isFullscreen ? "hidden" : "mx-auto mt-5 max-w-4xl"}>
+        <div
+          className={
+            isFullscreen
+              ? "fixed bottom-5 left-1/2 z-50 w-[calc(100%-2rem)] max-w-3xl -translate-x-1/2"
+              : "mx-auto mt-5 max-w-4xl"
+          }
+        >
           <ReaderToolbar
             currentPage={canRead ? currentPage : 1}
+            isFullscreen={isFullscreen}
             onBack={goBack}
             onFullscreen={enterFullscreen}
             onNext={goNext}
             onPrev={goPrev}
             onResetZoom={() => setZoom(1)}
-            onZoomIn={() => setZoom((value) => Math.min(value + 0.1, 1.15))}
+            onZoomIn={() => setZoom((value) => Math.min(value + 0.1, 1.35))}
             onZoomOut={() => setZoom((value) => Math.max(value - 0.1, 0.75))}
             totalPages={canRead ? totalPages : 1}
             zoom={zoom}
