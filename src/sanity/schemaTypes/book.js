@@ -26,7 +26,7 @@ export const book = defineType({
     }),
     defineField({
       name: "categories",
-      title: "Kategori / Genre",
+      title: "Genre",
       type: "array",
       of: [
         {
@@ -38,12 +38,12 @@ export const book = defineType({
     }),
     defineField({
       name: "category",
-      title: "Kategori Lama",
+      title: "Genre Lama",
       type: "reference",
       to: [{ type: "category" }],
       hidden: true,
       description:
-        "Field lama untuk kompatibilitas data. Gunakan Kategori / Genre.",
+        "Field lama untuk kompatibilitas data. Gunakan Genre.",
     }),
     defineField({
       name: "year",
@@ -86,8 +86,8 @@ export const book = defineType({
         title,
         subtitle:
           categoryCount > 0
-            ? `${categoryCount} kategori / genre`
-            : "Belum ada kategori",
+            ? `${categoryCount} genre`
+            : "Belum ada genre",
         media,
       };
     },

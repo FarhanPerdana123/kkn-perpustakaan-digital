@@ -3,13 +3,13 @@ import Image from "next/image";
 import { AuthMenu } from "./AuthMenu";
 import { Icon } from "./icons";
 
-const navItems = ["Beranda", "Koleksi Buku", "Kategori", "Bookmark"];
+const navItems = ["Beranda", "Koleksi Buku", "Genre", "Bookmark"];
 
 function getHref(item) {
   const links = {
     Beranda: "/",
     "Koleksi Buku": "/koleksi",
-    Kategori: "/#kategori",
+    Genre: "/#kategori",
     Bookmark: "/bookmark",
     "Tentang Kami": "/#tentang-kami",
   };

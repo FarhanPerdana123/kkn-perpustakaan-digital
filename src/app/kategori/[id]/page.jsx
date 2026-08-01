@@ -18,7 +18,7 @@ export async function generateMetadata({ params }) {
 
   if (!category) {
     return {
-      title: "Kategori Tidak Ditemukan",
+      title: "Genre Tidak Ditemukan",
     };
   }
 
@@ -51,10 +51,10 @@ export default async function CategoryPage({ params }) {
               className="text-sm font-semibold text-emerald-800 hover:text-emerald-950"
               href="/#kategori"
             >
-              Kembali ke kategori
+              Kembali ke genre
             </Link>
             <p className="mt-6 text-sm font-bold uppercase tracking-[0.18em] text-emerald-700">
-              Kategori Buku
+              Genre Buku
             </p>
             <h1 className="mt-3 text-4xl font-bold text-slate-950">
               {category.name}
@@ -67,11 +67,11 @@ export default async function CategoryPage({ params }) {
 
         <FeaturedCollections
           books={books}
-          emptyDescription="Buku dapat ditambahkan melalui Sanity Studio dengan memilih kategori ini."
-          emptyTitle={`Belum ada buku untuk kategori ${category.name}.`}
+          emptyDescription="Buku dapat ditambahkan melalui Sanity Studio dengan memilih genre ini."
+          emptyTitle={`Belum ada buku untuk genre ${category.name}.`}
           eyebrow="Daftar Buku"
           showAction={false}
-          title={`Buku kategori ${category.name}`}
+          title={`Buku genre ${category.name}`}
         />
       </main>
       <Footer footer={footer} />

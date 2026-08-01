@@ -191,7 +191,7 @@ export async function getCategories() {
   const sanityCategories = await fetchFromSanity(`*[_type == "category" && defined(slug.current)] | order(_createdAt desc) {
     "id": slug.current,
     "name": coalesce(name, ""),
-    "description": coalesce(description, "Kategori buku perpustakaan digital desa."),
+    "description": coalesce(description, "Genre buku perpustakaan digital desa."),
     "featured": coalesce(featured, true),
     "createdAt": coalesce(_createdAt, _updatedAt)
   }`);

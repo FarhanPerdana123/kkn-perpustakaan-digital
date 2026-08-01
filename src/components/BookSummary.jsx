@@ -68,7 +68,7 @@ export function BookSummary({ author, categories = [], description, year }) {
 
       {hasMetadata ? (
         <dl className="grid max-w-3xl gap-4">
-          <MetadataRow label="Kategori">
+          <MetadataRow label="Genre">
             {categories.map((category) => (
               <Chip key={category.id || category.name} tone="emerald">
                 {category.name}

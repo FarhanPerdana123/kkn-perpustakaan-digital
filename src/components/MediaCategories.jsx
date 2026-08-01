@@ -25,7 +25,7 @@ export function MediaCategories({ categories }) {
     >
       <div className="max-w-2xl">
         <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-700">
-          Kategori Buku
+          Genre Buku
         </p>
         <h2 className="mt-3 text-3xl font-bold text-slate-950 sm:text-4xl">
           Temukan bacaan berdasarkan kebutuhan.
@@ -34,7 +34,7 @@ export function MediaCategories({ categories }) {
 
       <div className="relative mt-6 sm:mt-8">
         <button
-          aria-label="Kategori sebelumnya"
+          aria-label="Genre sebelumnya"
           className="absolute left-0 top-1/2 z-10 hidden h-12 w-10 -translate-x-1/2 -translate-y-1/2 rounded-r-md border border-slate-200 bg-white text-2xl font-bold text-slate-600 shadow-sm hover:bg-emerald-50 hover:text-emerald-800 disabled:cursor-not-allowed disabled:opacity-40 md:block"
           disabled={page === 0}
           onClick={() => goToPage(page - 1)}
@@ -64,7 +64,7 @@ export function MediaCategories({ categories }) {
         </div>
 
         <button
-          aria-label="Kategori berikutnya"
+          aria-label="Genre berikutnya"
           className="absolute right-0 top-1/2 z-10 hidden h-12 w-10 -translate-y-1/2 translate-x-1/2 rounded-l-md border border-slate-200 bg-white text-2xl font-bold text-slate-600 shadow-sm hover:bg-emerald-50 hover:text-emerald-800 disabled:cursor-not-allowed disabled:opacity-40 md:block"
           disabled={page >= totalPages - 1}
           onClick={() => goToPage(page + 1)}
@@ -77,7 +77,7 @@ export function MediaCategories({ categories }) {
       {totalPages > 1 ? (
         <div className="mt-6 flex flex-wrap items-center justify-center gap-2 sm:mt-8">
           <button
-            aria-label="Halaman kategori sebelumnya"
+            aria-label="Halaman genre sebelumnya"
             className="grid h-10 w-10 place-items-center rounded-md border border-slate-200 bg-white text-lg font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
             disabled={page === 0}
             onClick={() => goToPage(page - 1)}
@@ -87,7 +87,7 @@ export function MediaCategories({ categories }) {
           </button>
           {Array.from({ length: totalPages }).map((_, index) => (
             <button
-              aria-label={`Halaman kategori ${index + 1}`}
+              aria-label={`Halaman genre ${index + 1}`}
               className={`grid h-10 min-w-10 place-items-center rounded-md border px-3 text-sm font-bold ${
                 page === index
                   ? "border-emerald-800 bg-emerald-800 text-white"
@@ -101,7 +101,7 @@ export function MediaCategories({ categories }) {
             </button>
           ))}
           <button
-            aria-label="Halaman kategori berikutnya"
+            aria-label="Halaman genre berikutnya"
             className="grid h-10 w-10 place-items-center rounded-md border border-slate-200 bg-white text-lg font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
             disabled={page >= totalPages - 1}
             onClick={() => goToPage(page + 1)}
