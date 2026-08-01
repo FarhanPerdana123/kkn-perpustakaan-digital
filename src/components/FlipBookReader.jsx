@@ -48,11 +48,11 @@ function useReaderSize(isFullscreen = false) {
         const pageWidth = isMobile
           ? Math.max(
               280,
-              Math.min(maxPageWidth, maxPageWidthByHeight, isFullscreen ? 520 : 390),
+              Math.min(maxPageWidth, maxPageWidthByHeight, isFullscreen ? 2000 : 390),
             )
           : Math.max(
               340,
-              Math.min(maxPageWidth, maxPageWidthByHeight, isFullscreen ? 620 : 430),
+              Math.min(maxPageWidth, maxPageWidthByHeight, isFullscreen ? 2000 : 430),
             );
 
         const pageHeight = Math.min(
@@ -751,9 +751,9 @@ export function FlipBookReader({ pdfUrl, title }) {
                         height={height}
                         size="fixed"
                         minWidth={280}
-                        maxWidth={isFullscreen ? 760 : 520}
+                        maxWidth={isFullscreen ? 2000 : 520}
                         minHeight={390}
-                        maxHeight={isFullscreen ? 1080 : 740}
+                        maxHeight={isFullscreen ? 2840 : 740}
                         autoSize={false}
                         className={`mx-auto overflow-hidden rounded-sm shadow-[0_18px_45px_rgba(0,0,0,0.28)] ${
                           isFrontCoverView
