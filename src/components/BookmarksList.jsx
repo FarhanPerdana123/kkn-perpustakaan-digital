@@ -83,42 +83,57 @@ export function BookmarksList({ books }) {
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {savedBooks.map((book) => (
-        <article
-          className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
-          key={book.id}
-        >
-          <div className="relative aspect-[2/3] w-full overflow-hidden bg-slate-100">
-            {book.coverUrl ? (
-              <Image
-                alt={`Sampul ${book.title}`}
-                className="object-cover object-top"
-                fill
-                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                src={book.coverUrl}
-              />
-            ) : (
-              <div className="grid h-full w-full place-items-center bg-emerald-50 text-emerald-900">
-                <BookOpen className="h-10 w-10 sm:h-12 sm:w-12" />
-              </div>
-            )}
-          </div>
-          <div className="p-4">
-            <h3 className="line-clamp-2 text-lg font-bold leading-6 text-slate-950">
-              {book.title}
-            </h3>
-            <p className="mt-2 text-sm font-semibold text-slate-600">
-              {[book.author, book.year].filter(Boolean).join(" - ")}
-            </p>
+      {savedBooks.map((book) => {
+        const bookHref = `/koleksi/${book.readerId || book.slug || book.id}`;
+
+        return (
+          <article
+            className="group flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
+            key={book.id}
+          >
             <Link
-              className="mt-4 inline-flex rounded-lg bg-slate-950 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-900"
-              href={`/koleksi/${book.readerId || book.slug || book.id}`}
+              aria-label={`Baca buku ${book.title}`}
+              className="group/cover relative aspect-[2/3] w-full overflow-hidden bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+              href={bookHref}
             >
-              Baca Buku
+              {book.coverUrl ? (
+                <Image
+                  alt={`Sampul ${book.title}`}
+                  className="object-cover object-top transition-transform duration-300 group-hover/cover:scale-105"
+                  fill
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  src={book.coverUrl}
+                />
+              ) : (
+                <div className="grid h-full w-full place-items-center bg-emerald-50 text-emerald-900 transition-colors group-hover/cover:bg-emerald-100">
+                  <BookOpen className="h-10 w-10 sm:h-12 sm:w-12" />
+                </div>
+              )}
             </Link>
-          </div>
-        </article>
-      ))}
+            <div className="flex flex-1 flex-col p-4">
+              <h3 className="line-clamp-2 text-lg font-bold leading-6 text-slate-950">
+                <Link
+                  className="transition-colors hover:text-emerald-800"
+                  href={bookHref}
+                >
+                  {book.title}
+                </Link>
+              </h3>
+              <p className="mt-2 text-sm font-semibold text-slate-600">
+                {[book.author, book.year].filter(Boolean).join(" - ")}
+              </p>
+              <div className="mt-auto pt-4">
+                <Link
+                  className="inline-flex rounded-lg bg-slate-950 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-900"
+                  href={bookHref}
+                >
+                  Baca Buku
+                </Link>
+              </div>
+            </div>
+          </article>
+        );
+      })}
     </div>
   );
 }

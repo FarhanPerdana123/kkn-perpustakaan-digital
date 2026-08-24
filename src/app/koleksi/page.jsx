@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { FeaturedCollections } from "@/components/FeaturedCollections";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
